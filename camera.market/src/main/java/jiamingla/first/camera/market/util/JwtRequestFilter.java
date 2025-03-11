@@ -30,33 +30,31 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         final String authorizationHeader = request.getHeader("Authorization");
+        //新增這一段
+        if(authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")){
+            chain.doFilter(request,response);
+            return;
+        }
 
         String username = null;
         String jwt = null;
-
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
             username = jwtUtil.extractUsername(jwt);
         }
-        //沒有token直接返回401
-        else{
-            response.sendError(HttpStatus.UNAUTHORIZED.value(), "No token provided");
-            return;
-        }
-
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
             UserDetails userDetails = null;
-            try{
+            try {
                 userDetails = this.customUserDetailsService.loadUserByUsername(username);
-            }catch(Exception e){
-                System.out.println("loadUserByUsername error: " + e.getMessage());// Add this line
-                e.printStackTrace();// Add this line
+            } catch (Exception e) {
+                System.out.println("loadUserByUsername error: " + e.getMessage());
+                e.printStackTrace();
                 chain.doFilter(request, response);
                 return;
             }
-            System.out.println("UserDetails:"+userDetails); // Add this line
+            System.out.println("UserDetails:" + userDetails);
             if (jwtUtil.validateToken(jwt, userDetails)) {
 
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(

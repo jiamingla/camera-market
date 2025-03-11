@@ -5,6 +5,7 @@ import jiamingla.first.camera.market.util.JwtRequestFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -29,12 +30,15 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                //設定API的權限, 先通過permitAll, 再通過authenticated, 最後才檢查JwtRequestFilter
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/members/register", "/api/members/login").permitAll() // 允许注册和登录接口不需要token
-                        .anyRequest().authenticated() // 其他接口都需要验证
+                        .requestMatchers("/api/members/register", "/api/members/login").permitAll() // 允許註冊和登錄接口不需要token
+                        .requestMatchers(HttpMethod.GET, "/api/listings/**").permitAll() // 允許 GET /api/listings/** 不需要 token
+                        .anyRequest().authenticated() // 其他所有請求都需要通過驗證
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))// 使用 JWT，不需要 Session
-                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)//將jwt驗證放到所有請求之前
+                //把JwtRequestFilter加到UsernamePasswordAuthenticationFilter的前面
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
         ;
         return http.build();
     }
