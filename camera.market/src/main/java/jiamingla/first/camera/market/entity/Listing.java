@@ -1,15 +1,17 @@
 package jiamingla.first.camera.market.entity;
 
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Data
 public class Listing {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -29,14 +31,16 @@ public class Listing {
     @NotNull(message = "Price is required")
     private Double price;
 
-    @ManyToOne
-    @JoinColumn(name = "seller_id")
-    private Member seller;
+    @NotBlank(message = "Category is required")
+    private String category;
 
     @Enumerated(EnumType.STRING)
-    private ListingStatus status;
-    
-    private String category;
+    private ListingStatus status = ListingStatus.OPEN;
+
+    @ManyToOne
+    @JoinColumn(name = "seller_id")
+    @JsonIgnore
+    private Member seller;
 
     private LocalDateTime createTime;
 

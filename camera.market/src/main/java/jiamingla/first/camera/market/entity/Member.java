@@ -1,17 +1,13 @@
 package jiamingla.first.camera.market.entity;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
+
+import java.util.List;
 
 @Entity
 @Data
@@ -22,22 +18,20 @@ public class Member {
     private Long id;
 
     @NotBlank(message = "Username is required")
+    @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
     @Column(unique = true)
     private String username;
 
     @NotBlank(message = "Password is required")
+    @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
 
-    @Email(message = "Invalid email format")
     @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
     @Column(unique = true)
     private String email;
 
-    private String name;
-    private String address;
-    private String phone;
-    private LocalDateTime createTime;
-
+    @JsonIgnore //避免無限遞迴
     @OneToMany(mappedBy = "seller")
     private List<Listing> listings;
 }

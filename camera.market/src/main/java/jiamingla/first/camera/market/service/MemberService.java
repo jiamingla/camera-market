@@ -5,7 +5,6 @@ import jiamingla.first.camera.market.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.Optional;
 
 @Service
@@ -35,5 +34,8 @@ public class MemberService {
     }
     public Optional<Member> findByUsername(String username) {
         return memberRepository.findByUsername(username);
+    }
+    public Optional<Member> getMemberWithListings(Long id){
+        return memberRepository.findById(id);
     }
 }

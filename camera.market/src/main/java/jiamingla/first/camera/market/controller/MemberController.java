@@ -2,6 +2,7 @@ package jiamingla.first.camera.market.controller;
 
 import jakarta.validation.Valid;
 import jiamingla.first.camera.market.dto.LoginRequest;
+import jiamingla.first.camera.market.dto.MemberResponse;
 import jiamingla.first.camera.market.entity.Member;
 import jiamingla.first.camera.market.service.MemberService;
 import jiamingla.first.camera.market.util.JwtUtil;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/members")
@@ -62,5 +64,20 @@ public class MemberController {
             // 登入失敗，返回 401 Unauthorized
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
+    }
+
+    @GetMapping("/member/{id}")
+    public ResponseEntity<?> getMemberWithListings(@PathVariable Long id){
+        Optional<Member> optionalMember = memberService.getMemberWithListings(id);
+        if(optionalMember.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cannot find member");
+        }
+        Member member = optionalMember.get();
+        MemberResponse response = new MemberResponse();
+        response.setId(member.getId());
+        response.setUsername(member.getUsername());
+        response.setEmail(member.getEmail());
+        response.setListings(member.getListings());
+        return ResponseEntity.ok(response);
     }
 }
