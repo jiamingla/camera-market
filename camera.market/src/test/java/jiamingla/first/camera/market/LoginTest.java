@@ -13,11 +13,9 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,37 +43,55 @@ public class LoginTest {
 
     private String protectedEndpoint = "/api/listings"; //受保護的路由
 
+    private String token; // 在這裡聲明 token 變數
+
     @BeforeEach
-    public void setup() {
+    public void setup() throws Exception {
         // Create a user for testing
         Member member = new Member();
         member.setUsername("testuser");
         member.setPassword(passwordEncoder.encode("testpassword"));
         member.setEmail("test@example.com");
         memberRepository.save(member);
+
+        //每次都先登入，獲取token
+        String requestBody = "{\"username\":\"testuser\",\"password\":\"testpassword\"}";
+        MvcResult loginResult = mockMvc.perform(post("/api/members/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andReturn();
+        // Extract the token from the response.
+        String responseContent = loginResult.getResponse().getContentAsString();
+        token = objectMapper.readTree(responseContent).get("token").asText();
+        System.out.println("token: " + token);
     }
 
     @Test
     public void testSuccessfulLogin() throws Exception {
-        //Perform login
-        ResultActions resultActions = mockMvc.perform(get(protectedEndpoint) // Assuming /api/private is a protected endpoint
-                        .with(httpBasic("testuser", "testpassword")))
+        // 3. Use the token to access the protected endpoint.
+        mockMvc.perform(get(protectedEndpoint)
+                        .header("Authorization", "Bearer " + token)) // Add the token to the Authorization header
                 .andExpect(status().isOk());
     }
 
     @Test
     public void testFailedLoginWithWrongPassword() throws Exception {
         // Perform login with wrong password
-        mockMvc.perform(get(protectedEndpoint) // Assuming /api/private is a protected endpoint
-                        .with(httpBasic("testuser", "wrongpassword")))
+        String requestBody = "{\"username\":\"testuser\",\"password\":\"wrongpassword\"}";
+        mockMvc.perform(post("/api/members/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     public void testFailedLoginWithUnknownUser() throws Exception {
         // Perform login with unknown username
-        mockMvc.perform(get(protectedEndpoint) // Assuming /api/private is a protected endpoint
-                        .with(httpBasic("unknownuser", "testpassword")))
+        String requestBody = "{\"username\":\"unknownuser\",\"password\":\"testpassword\"}";
+        mockMvc.perform(post("/api/members/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -96,10 +112,9 @@ public class LoginTest {
                 .andExpect(jsonPath("$.username").value("test2"))
                 .andExpect(jsonPath("$.email").value("test2@example.com"));
     }
+
     @Test
     public void testCreateListingWithLogin() throws Exception {
-        String username = "testuser";
-        String password = "testpassword";
         Listing listing = new Listing();
         listing.setTitle("test");
         listing.setDescription("test");
@@ -108,12 +123,11 @@ public class LoginTest {
         listing.setPrice(12.3);
         listing.setCategory("test");
 
-        MvcResult mvcResult = mockMvc.perform(post(protectedEndpoint)
-                        .with(httpBasic(username, password))
+        mockMvc.perform(post(protectedEndpoint)
+                        .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(listing)))
-                .andExpect(status().isCreated())
-                .andReturn();
+                .andExpect(status().isCreated());
     }
 
     @Test
@@ -124,6 +138,18 @@ public class LoginTest {
         member.setPassword(passwordEncoder.encode("testpassword"));
         member.setEmail("test2@example.com");
         memberRepository.save(member);
+
+        String requestBody = "{\"username\":\"testuser2\",\"password\":\"testpassword\"}";
+        MvcResult loginResult = mockMvc.perform(post("/api/members/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 2. Extract the token from the response.
+        String responseContent = loginResult.getResponse().getContentAsString();
+        String token2 = objectMapper.readTree(responseContent).get("token").asText();
+
         //create listing
         Listing listing = new Listing();
         listing.setTitle("test");
@@ -144,7 +170,7 @@ public class LoginTest {
         newListing.setPrice(12.3);
         newListing.setCategory("test");
         mockMvc.perform(put(protectedEndpoint)
-                        .with(httpBasic("testuser2", "testpassword"))
+                        .header("Authorization", "Bearer " + token2)// Add the token to the Authorization header
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newListing)))
                 .andExpect(status().is5xxServerError());
@@ -152,9 +178,6 @@ public class LoginTest {
 
     @Test
     public void testUpdateListingBySelf() throws Exception {
-        String username = "testuser";
-        String password = "testpassword";
-
         Listing listing = new Listing();
         listing.setTitle("test");
         listing.setDescription("test");
@@ -162,7 +185,7 @@ public class LoginTest {
         listing.setModel("test");
         listing.setPrice(12.3);
         listing.setCategory("test");
-        listing.setSeller(memberRepository.findByUsername(username).get());
+        listing.setSeller(memberRepository.findByUsername("testuser").get());
         listing = listingRepository.save(listing);
 
         Listing newListing = new Listing();
@@ -175,7 +198,7 @@ public class LoginTest {
         newListing.setCategory("test");
 
         mockMvc.perform(put(protectedEndpoint)
-                        .with(httpBasic(username, password))
+                        .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newListing)))
                 .andExpect(status().isOk())
@@ -189,6 +212,19 @@ public class LoginTest {
         member.setPassword(passwordEncoder.encode("testpassword"));
         member.setEmail("test2@example.com");
         memberRepository.save(member);
+
+        //get token
+        String requestBody = "{\"username\":\"testuser2\",\"password\":\"testpassword\"}";
+        MvcResult loginResult = mockMvc.perform(post("/api/members/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 2. Extract the token from the response.
+        String responseContent = loginResult.getResponse().getContentAsString();
+        String token2 = objectMapper.readTree(responseContent).get("token").asText();
+
         //create listing
         Listing listing = new Listing();
         listing.setTitle("test");
@@ -201,15 +237,13 @@ public class LoginTest {
         listing = listingRepository.save(listing);
 
         mockMvc.perform(delete(protectedEndpoint + "/" + listing.getId())
-                        .with(httpBasic("testuser2", "testpassword")))
+                        .header("Authorization", "Bearer " + token2)// Add the token to the Authorization header
+                        )
                 .andExpect(status().is5xxServerError());
     }
 
     @Test
     public void testDeleteListingBySelf() throws Exception {
-        String username = "testuser";
-        String password = "testpassword";
-
         Listing listing = new Listing();
         listing.setTitle("test");
         listing.setDescription("test");
@@ -217,11 +251,12 @@ public class LoginTest {
         listing.setModel("test");
         listing.setPrice(12.3);
         listing.setCategory("test");
-        listing.setSeller(memberRepository.findByUsername(username).get());
+        listing.setSeller(memberRepository.findByUsername("testuser").get());
         listing = listingRepository.save(listing);
 
         mockMvc.perform(delete(protectedEndpoint + "/" + listing.getId())
-                        .with(httpBasic(username, password)))
+                        .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
+                        )
                 .andExpect(status().isNoContent());
     }
 }

@@ -30,6 +30,7 @@ public class MemberService {
         }
         String encodedPassword = passwordEncoder.encode(member.getPassword());
         member.setPassword(encodedPassword);
+        System.out.println("註冊成功: " + member.getUsername() + ", Password: " + member.getPassword()); // Add this line
         return memberRepository.save(member);
     }
     public Optional<Member> findByUsername(String username) {
