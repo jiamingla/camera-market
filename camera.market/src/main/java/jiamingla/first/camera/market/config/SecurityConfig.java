@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 
 @Configuration
 @EnableWebSecurity
@@ -30,6 +31,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(new BasicAuthenticationEntryPoint())) // 添加這一行
                 //設定API的權限, 先通過permitAll, 再通過authenticated, 最後才檢查JwtRequestFilter
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/members/register", "/api/members/login").permitAll() // 允許註冊和登錄接口不需要token

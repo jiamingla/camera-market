@@ -1,7 +1,9 @@
 package jiamingla.first.camera.market.entity;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -29,7 +31,7 @@ public class Listing {
     private String model;
 
     @NotNull(message = "Price is required")
-    private Double price;
+    private int price;
 
     @NotBlank(message = "Category is required")
     private String category;
@@ -42,6 +44,8 @@ public class Listing {
     @JsonIgnore
     private Member seller;
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    @Column(updatable = false)
     private LocalDateTime createTime;
 
     // ... (getters and setters)

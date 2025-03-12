@@ -31,6 +31,7 @@ public class ListingService {
         Member seller = memberService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Seller not found"));
         listing.setSeller(seller);
+        System.out.println("listing: " + listing);
         return listingRepository.save(listing);
     }
 
