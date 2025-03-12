@@ -1,6 +1,7 @@
 package jiamingla.first.camera.market.service;
 
 import jiamingla.first.camera.market.entity.Member;
+import jiamingla.first.camera.market.exception.BusinessException;
 import jiamingla.first.camera.market.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,11 +22,11 @@ public class MemberService {
         Optional<Member> existingMemberByEmail = memberRepository.findByEmail(member.getEmail());
 
         if (existingMemberByUsername.isPresent()) {
-            throw new RuntimeException("Username already exists");
+            throw new BusinessException("Username already exists");
         }
 
         if (existingMemberByEmail.isPresent()) {
-            throw new RuntimeException("Email already exists");
+            throw new BusinessException("Email already exists");
         }
         String encodedPassword = passwordEncoder.encode(member.getPassword());
         member.setPassword(encodedPassword);

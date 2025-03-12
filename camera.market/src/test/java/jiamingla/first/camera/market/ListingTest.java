@@ -135,7 +135,7 @@ public class ListingTest {
                         .header("Authorization", "Bearer " + token2)// Add the token to the Authorization header
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newListing)))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().is4xxClientError());
     }
 
     @Test
@@ -201,7 +201,7 @@ public class ListingTest {
         mockMvc.perform(delete("/api/listings/" + listing.getId())
                         .header("Authorization", "Bearer " + token2)// Add the token to the Authorization header
                         )
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isBadRequest());
     }
 
     @Test

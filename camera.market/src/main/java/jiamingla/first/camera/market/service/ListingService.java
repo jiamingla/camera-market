@@ -3,6 +3,8 @@ package jiamingla.first.camera.market.service;
 import jiamingla.first.camera.market.entity.Listing;
 import jiamingla.first.camera.market.entity.ListingStatus;
 import jiamingla.first.camera.market.entity.Member;
+import jiamingla.first.camera.market.exception.BusinessException;
+import jiamingla.first.camera.market.exception.SystemException;
 import jiamingla.first.camera.market.repository.ListingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -26,22 +28,36 @@ public class ListingService {
     public Listing createListing(Listing listing) {
         listing.setCreateTime(LocalDateTime.now());
         listing.setStatus(ListingStatus.OPEN);
+    
+        // Validate Listing fields
+        if (listing.getTitle() == null || listing.getTitle().trim().isEmpty()) {
+            throw new BusinessException("Listing title cannot be empty.");
+        }
+        if (listing.getDescription() == null || listing.getDescription().trim().isEmpty()) {
+            throw new BusinessException("Listing description cannot be empty.");
+        }
+        // ... other validations for make, model, price, category, etc.
+    
+        if (listing.getPrice() < 0) {
+            throw new BusinessException("Price cannot be negative.");
+        }
+    
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         Member seller = memberService.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Seller not found"));
+                .orElseThrow(() -> new SystemException("Seller not found"));
         listing.setSeller(seller);
         System.out.println("listing: " + listing);
         return listingRepository.save(listing);
     }
-
+    
     public List<Listing> getAllListings() {
         return listingRepository.findAll();
     }
 
     public Listing getListingById(Long id) {
         return listingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Listing not found with id: " + id));
+                .orElseThrow(() -> new SystemException("Listing not found with id: " + id));
     }
 
     @Transactional
@@ -51,7 +67,7 @@ public class ListingService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         if(!existingListing.getSeller().getUsername().equals(username)){
-            throw new RuntimeException("You can not edit other's listing.");
+            throw new BusinessException("You can not edit other's listing.");
         }
         existingListing.setTitle(listing.getTitle());
         existingListing.setDescription(listing.getDescription());
@@ -69,7 +85,7 @@ public class ListingService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         if(!existingListing.getSeller().getUsername().equals(username)){
-            throw new RuntimeException("You can not delete other's listing.");
+            throw new BusinessException("You can not delete other's listing.");
         }
         listingRepository.deleteById(id);
     }
