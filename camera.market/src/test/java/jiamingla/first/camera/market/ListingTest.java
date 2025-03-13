@@ -121,7 +121,7 @@ public class ListingTest {
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory("test");
-        //listing.setSeller(member); 移除
+        listing.setSeller(member);
         listing = listingRepository.save(listing);
 
         Listing newListing = new Listing();
@@ -136,7 +136,7 @@ public class ListingTest {
                         .header("Authorization", "Bearer " + token2)// Add the token to the Authorization header
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newListing)))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -148,7 +148,7 @@ public class ListingTest {
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory("test");
-        //listing.setSeller(member); 移除
+        listing.setSeller(member);
         listing = listingRepository.save(listing);
 
         Listing newListing = new Listing();
@@ -196,7 +196,7 @@ public class ListingTest {
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory("test");
-        //listing.setSeller(member); 移除
+        listing.setSeller(member);
         listing = listingRepository.save(listing);
 
         mockMvc.perform(delete("/api/listings/" + listing.getId())
@@ -214,7 +214,7 @@ public class ListingTest {
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory("test");
-        //listing.setSeller(member); 移除
+        listing.setSeller(member);
         listing = listingRepository.save(listing);
 
         mockMvc.perform(delete("/api/listings/" + listing.getId())

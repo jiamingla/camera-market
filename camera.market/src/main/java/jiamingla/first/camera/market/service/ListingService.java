@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -36,25 +37,7 @@ public class ListingService {
         listing.setStatus(ListingStatus.OPEN);
 
         // Validate Listing fields
-        if (listing.getTitle() == null || listing.getTitle().trim().isEmpty()) {
-            logger.error("Listing title cannot be empty.");
-            throw new BusinessException("Listing title cannot be empty.");
-        }
-        if (listing.getDescription() == null || listing.getDescription().trim().isEmpty()) {
-            logger.error("Listing description cannot be empty.");
-            throw new BusinessException("Listing description cannot be empty.");
-        }
-        // ... other validations for make, model, price, category, etc.
-
-        if (listing.getPrice() < 0) {
-            logger.error("Price cannot be negative.");
-            throw new BusinessException("Price cannot be negative.");
-        }
-        //確認傳入的 make 是 enum 中的選項
-        if(!isValidMake(listing.getMake())){
-            logger.error("Make is not correct.");
-            throw new BusinessException("Make is not correct");
-        }
+        validateListing(listing);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
@@ -63,7 +46,9 @@ public class ListingService {
                     logger.error("Seller not found with username: {}", username);
                     return new SystemException("Seller not found");
                 });
+        //直接設定seller就好
         listing.setSeller(seller);
+
         logger.info("Listing created successfully: {}", listing);
         return listingRepository.save(listing);
     }
@@ -93,7 +78,9 @@ public class ListingService {
         // Check if the listing belongs to the current user
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        if(!existingListing.getSeller().getUsername().equals(username)){
+
+        //現在可以直接使用getSeller()取得
+        if (!existingListing.getSeller().getUsername().equals(username)) {
             logger.error("User {} is not the owner of listing {}.", username, listing.getId());
             throw new BusinessException("You can not edit other's listing.");
         }
@@ -104,7 +91,7 @@ public class ListingService {
         existingListing.setPrice(listing.getPrice());
         existingListing.setCategory(listing.getCategory());
         //確認傳入的 make 是 enum 中的選項
-        if(!isValidMake(existingListing.getMake())){
+        if (!isValidMake(existingListing.getMake())) {
             logger.error("Make is not correct.");
             throw new BusinessException("Make is not correct");
         }
@@ -120,7 +107,8 @@ public class ListingService {
         // Check if the listing belongs to the current user
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        if(!existingListing.getSeller().getUsername().equals(username)){
+        //現在可以直接使用getSeller()取得
+        if (!existingListing.getSeller().getUsername().equals(username)) {
             logger.error("User {} is not the owner of listing {}.", username, id);
             throw new BusinessException("You can not delete other's listing.");
         }
@@ -141,7 +129,8 @@ public class ListingService {
         logger.info("Retrieved {} listings in category {}.", listings.size(), category);
         return listings;
     }
-     private boolean isValidMake(Make make) {
+
+    private boolean isValidMake(Make make) {
         logger.debug("Validating make: {}", make);
         // 直接檢查 enum 中是否存在
         for (Make validMake : Make.values()) {
@@ -152,5 +141,28 @@ public class ListingService {
         }
         logger.warn("Make is not valid: {}", make);
         return false;
+    }
+
+    private void validateListing(Listing listing) {
+        if (listing.getTitle() == null || listing.getTitle().trim().isEmpty()) {
+            logger.error("Listing title cannot be empty");
+            throw new BusinessException("Listing title cannot be empty");
+        }
+        if (listing.getDescription() == null || listing.getDescription().trim().isEmpty()) {
+            logger.error("Listing description cannot be empty");
+            throw new BusinessException("Listing description cannot be empty");
+        }
+
+        if (listing.getPrice() < 0) {
+            logger.error("Listing price cannot be negative");
+            throw new BusinessException("Listing price cannot be negative");
+        }
+        //確認傳入的 make 是 enum 中的選項
+        if (!isValidMake(listing.getMake())) {
+            logger.error("Make is not correct.");
+            throw new BusinessException("Make is not correct");
+        }
+
+        logger.debug("Listing information check passed");
     }
 }

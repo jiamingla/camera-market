@@ -2,6 +2,7 @@ package jiamingla.first.camera.market.service;
 
 import jiamingla.first.camera.market.entity.Member;
 import jiamingla.first.camera.market.exception.BusinessException;
+import jiamingla.first.camera.market.exception.SystemException;
 import jiamingla.first.camera.market.repository.MemberRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +48,13 @@ public class MemberService {
             logger.debug("Member found: {}", username);
         }
         return member;
+    }
+     public Member getMemberById(Long id) {
+        logger.info("Retrieving member by ID: {}", id);
+        return memberRepository.findById(id).orElseThrow(() -> {
+            logger.error("Member not found with ID: {}", id);
+            return new SystemException("Member not found with ID: " + id);
+        });
     }
     public Optional<Member> getMemberWithListings(Long id){
         logger.info("Get Member With Listings by Id: {}", id);
