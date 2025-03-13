@@ -1,6 +1,7 @@
 package jiamingla.first.camera.market;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jiamingla.first.camera.market.entity.Category; // 引入 Category enum
 import jiamingla.first.camera.market.entity.Listing;
 import jiamingla.first.camera.market.entity.Member;
 import jiamingla.first.camera.market.repository.ListingRepository;
@@ -83,8 +84,7 @@ public class ListingTest {
         listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
-        listing.setCategory("test");
-        //listing.setSeller(member); 移除
+        listing.setCategory(Category.DSLR);// 修改：使用 Category enum
 
         mockMvc.perform(post(apiListings)
                         .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
@@ -120,7 +120,7 @@ public class ListingTest {
         listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
-        listing.setCategory("test");
+        listing.setCategory(Category.DSLR); // 修改：使用 Category enum
         listing.setSeller(member);
         listing = listingRepository.save(listing);
 
@@ -131,7 +131,7 @@ public class ListingTest {
         newListing.setMake(Make.CANON); //使用Make enum
         newListing.setModel("test");
         newListing.setPrice(12);
-        newListing.setCategory("test");
+        newListing.setCategory(Category.DSLR);// 修改：使用 Category enum
         mockMvc.perform(patch(apiListings) // Changed from put to patch
                         .header("Authorization", "Bearer " + token2)// Add the token to the Authorization header
                         .contentType(MediaType.APPLICATION_JSON)
@@ -147,7 +147,7 @@ public class ListingTest {
         listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
-        listing.setCategory("test");
+        listing.setCategory(Category.DSLR);// 修改：使用 Category enum
         listing.setSeller(member);
         listing = listingRepository.save(listing);
 
@@ -158,7 +158,7 @@ public class ListingTest {
         newListing.setMake(Make.CANON); //使用Make enum
         newListing.setModel("test");
         newListing.setPrice(12);
-        newListing.setCategory("test");
+        newListing.setCategory(Category.DSLR);// 修改：使用 Category enum
 
         mockMvc.perform(patch("/api/listings") // Changed from put to patch
                         .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
@@ -195,7 +195,7 @@ public class ListingTest {
         listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
-        listing.setCategory("test");
+        listing.setCategory(Category.DSLR);// 修改：使用 Category enum
         listing.setSeller(member);
         listing = listingRepository.save(listing);
 
@@ -213,7 +213,7 @@ public class ListingTest {
         listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
-        listing.setCategory("test");
+        listing.setCategory(Category.DSLR);// 修改：使用 Category enum
         listing.setSeller(member);
         listing = listingRepository.save(listing);
 
@@ -221,5 +221,48 @@ public class ListingTest {
                         .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
                         )
                 .andExpect(status().isNoContent());
+    }
+    @Test
+    public void testCreateListingWithWrongCategory() throws Exception {
+        Listing listing = new Listing();
+        listing.setTitle("test");
+        listing.setDescription("test");
+        listing.setMake(Make.CANON); //使用Make enum
+        listing.setModel("test");
+        listing.setPrice(12);
+        listing.setCategory(null); //設定錯誤的category
+
+        mockMvc.perform(post(apiListings)
+                        .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(listing)))
+                .andExpect(status().isBadRequest());
+    }
+     @Test
+    public void testUpdateListingWithWrongCategory() throws Exception {
+        Listing listing = new Listing();
+        listing.setTitle("test");
+        listing.setDescription("test");
+        listing.setMake(Make.CANON); //使用Make enum
+        listing.setModel("test");
+        listing.setPrice(12);
+        listing.setCategory(Category.DSLR);// 修改：使用 Category enum
+        listing.setSeller(member);
+        listing = listingRepository.save(listing);
+
+        Listing newListing = new Listing();
+        newListing.setId(listing.getId());
+        newListing.setTitle("test");
+        newListing.setDescription("test2");
+        newListing.setMake(Make.CANON); //使用Make enum
+        newListing.setModel("test");
+        newListing.setPrice(12);
+        newListing.setCategory(null);// 修改：使用 Category enum
+
+        mockMvc.perform(patch("/api/listings") // Changed from put to patch
+                        .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(newListing)))
+                .andExpect(status().isBadRequest());
     }
 }

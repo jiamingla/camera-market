@@ -1,6 +1,8 @@
 package jiamingla.first.camera.market;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jiamingla.first.camera.market.entity.Category;
 import jiamingla.first.camera.market.entity.Listing;
 import jiamingla.first.camera.market.entity.Member;
 import jiamingla.first.camera.market.repository.ListingRepository;
@@ -133,7 +135,7 @@ public class LoginTest {
         listing.setMake(Make.CANON); // Correct: Use Make enum
         listing.setModel("test");
         listing.setPrice(12);
-        listing.setCategory("test");
+        listing.setCategory(Category.ACCESSORY);
         // listing.setSeller(member); // Remove: Let the service handle this
         listingRepository.save(listing);
 

@@ -36,8 +36,10 @@ public class Listing {
     @NotNull(message = "Price is required")
     private int price;
 
-    @NotBlank(message = "Category is required")
-    private String category;
+    // 修改：將 category 的類型改為 Category enum
+    @NotNull(message = "Category is required")
+    @Enumerated(EnumType.STRING) // 用於標示這個欄位在資料庫中以字串方式儲存，否則預設是數字
+    private Category category;
 
     @Enumerated(EnumType.STRING)
     private ListingStatus status = ListingStatus.OPEN;
@@ -62,7 +64,7 @@ public class Listing {
                 ", make=" + make +
                 ", model='" + model + '\'' +
                 ", price=" + price +
-                ", category='" + category + '\'' +
+                ", category=" + category +  // 修改：顯示 Category enum
                 ", status=" + status +
                 ", sellerId=" + (seller != null ? seller.getId() : null) + // 為了顯示sellerId
                 ", createTime=" + createTime +

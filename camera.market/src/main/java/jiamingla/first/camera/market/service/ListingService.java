@@ -1,5 +1,6 @@
 package jiamingla.first.camera.market.service;
 
+import jiamingla.first.camera.market.entity.Category; // 引入 Category enum
 import jiamingla.first.camera.market.entity.Listing;
 import jiamingla.first.camera.market.entity.ListingStatus;
 import jiamingla.first.camera.market.entity.Member;
@@ -89,11 +90,16 @@ public class ListingService {
         existingListing.setMake(listing.getMake());
         existingListing.setModel(listing.getModel());
         existingListing.setPrice(listing.getPrice());
-        existingListing.setCategory(listing.getCategory());
+        existingListing.setCategory(listing.getCategory());//更新category
         //確認傳入的 make 是 enum 中的選項
         if (!isValidMake(existingListing.getMake())) {
             logger.error("Make is not correct.");
             throw new BusinessException("Make is not correct");
+        }
+        //新增檢查category
+          if (!isValidCategory(existingListing.getCategory())) {
+            logger.error("Category is not correct.");
+            throw new BusinessException("Category is not correct");
         }
         Listing updatedListing = listingRepository.save(existingListing);
         logger.info("Listing updated successfully: {}", updatedListing);
@@ -125,7 +131,9 @@ public class ListingService {
 
     public List<Listing> getListingsByCategoryId(String category) {
         logger.info("Retrieving listings by category: {}", category);
-        List<Listing> listings = listingRepository.findByCategory(category);
+       //沒有辦法直接使用category enum，所以要再轉型一次。
+       Category categoryEnum = Category.valueOf(category);
+        List<Listing> listings = listingRepository.findByCategory(categoryEnum);
         logger.info("Retrieved {} listings in category {}.", listings.size(), category);
         return listings;
     }
@@ -140,6 +148,18 @@ public class ListingService {
             }
         }
         logger.warn("Make is not valid: {}", make);
+        return false;
+    }
+         private boolean isValidCategory(Category category) {
+        logger.debug("Validating category: {}", category);
+        // 直接檢查 enum 中是否存在
+        for (Category validCategory : Category.values()) {
+            if (validCategory == category) {
+                logger.debug("Category is valid: {}", category);
+                return true;
+            }
+        }
+        logger.warn("Category is not valid: {}", category);
         return false;
     }
 
@@ -161,6 +181,11 @@ public class ListingService {
         if (!isValidMake(listing.getMake())) {
             logger.error("Make is not correct.");
             throw new BusinessException("Make is not correct");
+        }
+        //新增檢查category
+        if (!isValidCategory(listing.getCategory())) {
+            logger.error("Category is not correct.");
+            throw new BusinessException("Category is not correct");
         }
 
         logger.debug("Listing information check passed");
