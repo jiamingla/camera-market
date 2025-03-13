@@ -6,6 +6,8 @@ import jiamingla.first.camera.market.dto.MemberResponse;
 import jiamingla.first.camera.market.entity.Member;
 import jiamingla.first.camera.market.service.MemberService;
 import jiamingla.first.camera.market.util.JwtUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +25,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/members")
 public class MemberController {
-
+    private static final Logger logger = LoggerFactory.getLogger(MemberController.class);
     @Autowired
     private MemberService memberService;
 
@@ -35,14 +37,16 @@ public class MemberController {
 
     @PostMapping("/register")
     public ResponseEntity<Member> registerMember(@Valid @RequestBody Member member) {
+        logger.info("Received request to register member: {}", member.getUsername());
         Member registeredMember = memberService.registerMember(member);
+        logger.info("Member registered successfully: {}", registeredMember.getUsername());
         return new ResponseEntity<>(registeredMember, HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
+        logger.info("Received login request for user: {}", loginRequest.getUsername());
         try {
-            System.out.println("Login attempt for user: " + loginRequest.getUsername() + ", Password: " + loginRequest.getPassword()); // Add this line
             // 使用 AuthenticationManager 驗證使用者名和密碼
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
@@ -54,7 +58,7 @@ public class MemberController {
             // 產生 JWT Token
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String token = jwtUtil.generateToken(userDetails);
-            System.out.println("token: "+token); // Add this line
+            logger.info("User {} logged in successfully. JWT Token generated: {}", loginRequest.getUsername(), token);
 
             // 返回 Token
             Map<String, String> response = new HashMap<>();
@@ -62,14 +66,17 @@ public class MemberController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             // 登入失敗，返回 401 Unauthorized
+            logger.warn("Login failed for user: {}", loginRequest.getUsername(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
     }
 
     @GetMapping("/member/{id}")
     public ResponseEntity<?> getMemberWithListings(@PathVariable Long id){
+        logger.info("Received request to get Member With Listings, id: {}", id);
         Optional<Member> optionalMember = memberService.getMemberWithListings(id);
         if(optionalMember.isEmpty()){
+            logger.warn("Cannot find member: {}", id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cannot find member");
         }
         Member member = optionalMember.get();
@@ -78,6 +85,7 @@ public class MemberController {
         response.setUsername(member.getUsername());
         response.setEmail(member.getEmail());
         response.setListings(member.getListings());
+        logger.info("Returning Member With Listings, member: {}", response.getUsername());
         return ResponseEntity.ok(response);
     }
 }

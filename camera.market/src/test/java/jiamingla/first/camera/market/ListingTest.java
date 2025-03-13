@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import jiamingla.first.camera.market.entity.Make;
 
 import jakarta.transaction.Transactional;
 import java.util.Optional;
@@ -79,11 +80,11 @@ public class ListingTest {
         Listing listing = new Listing();
         listing.setTitle("test");
         listing.setDescription("test");
-        listing.setMake("test");
+        listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory("test");
-        listing.setSeller(member);
+        //listing.setSeller(member); 移除
 
         mockMvc.perform(post(apiListings)
                         .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
@@ -116,7 +117,7 @@ public class ListingTest {
         Listing listing = new Listing();
         listing.setTitle("test");
         listing.setDescription("test");
-        listing.setMake("test");
+        listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory("test");
@@ -127,15 +128,15 @@ public class ListingTest {
         newListing.setId(listing.getId());
         newListing.setTitle("test");
         newListing.setDescription("test2");
-        newListing.setMake("test");
+        newListing.setMake(Make.CANON); //使用Make enum
         newListing.setModel("test");
         newListing.setPrice(12);
         newListing.setCategory("test");
-        mockMvc.perform(put(apiListings)
+        mockMvc.perform(patch(apiListings) // Changed from put to patch
                         .header("Authorization", "Bearer " + token2)// Add the token to the Authorization header
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newListing)))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -143,7 +144,7 @@ public class ListingTest {
         Listing listing = new Listing();
         listing.setTitle("test");
         listing.setDescription("test");
-        listing.setMake("test");
+        listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory("test");
@@ -154,12 +155,12 @@ public class ListingTest {
         newListing.setId(listing.getId());
         newListing.setTitle("test");
         newListing.setDescription("test2");
-        newListing.setMake("test");
+        newListing.setMake(Make.CANON); //使用Make enum
         newListing.setModel("test");
         newListing.setPrice(12);
         newListing.setCategory("test");
 
-        mockMvc.perform(put("/api/listings")
+        mockMvc.perform(patch("/api/listings") // Changed from put to patch
                         .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newListing)))
@@ -191,7 +192,7 @@ public class ListingTest {
         Listing listing = new Listing();
         listing.setTitle("test");
         listing.setDescription("test");
-        listing.setMake("test");
+        listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory("test");
@@ -209,7 +210,7 @@ public class ListingTest {
         Listing listing = new Listing();
         listing.setTitle("test");
         listing.setDescription("test");
-        listing.setMake("test");
+        listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory("test");
