@@ -3,6 +3,8 @@ package jiamingla.first.camera.market.entity;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import org.springframework.data.annotation.CreatedDate;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -24,8 +26,10 @@ public class Listing {
     @NotBlank(message = "Description is required")
     private String description;
 
-    @NotBlank(message = "Make is required")
-    private String make;
+    // 欄位類型修改為 Make Enum
+    @NotNull(message = "Make is required")
+    @Enumerated(EnumType.STRING) // 用於標示這個欄位在資料庫中以字串方式儲存，否則預設是數字
+    private Make make;
 
     @NotBlank(message = "Model is required")
     private String model;
@@ -46,6 +50,7 @@ public class Listing {
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     @Column(updatable = false)
+    @CreatedDate
     private LocalDateTime createTime;
 
     // ... (getters and setters)

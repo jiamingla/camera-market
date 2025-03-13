@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import jiamingla.first.camera.market.entity.Make;
 
 import jakarta.transaction.Transactional;
 import java.util.Optional;
@@ -79,11 +80,11 @@ public class ListingTest {
         Listing listing = new Listing();
         listing.setTitle("test");
         listing.setDescription("test");
-        listing.setMake("test");
+        listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory("test");
-        listing.setSeller(member);
+        //listing.setSeller(member); 移除
 
         mockMvc.perform(post(apiListings)
                         .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
@@ -116,18 +117,18 @@ public class ListingTest {
         Listing listing = new Listing();
         listing.setTitle("test");
         listing.setDescription("test");
-        listing.setMake("test");
+        listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory("test");
-        listing.setSeller(member);
+        //listing.setSeller(member); 移除
         listing = listingRepository.save(listing);
 
         Listing newListing = new Listing();
         newListing.setId(listing.getId());
         newListing.setTitle("test");
         newListing.setDescription("test2");
-        newListing.setMake("test");
+        newListing.setMake(Make.CANON); //使用Make enum
         newListing.setModel("test");
         newListing.setPrice(12);
         newListing.setCategory("test");
@@ -143,18 +144,18 @@ public class ListingTest {
         Listing listing = new Listing();
         listing.setTitle("test");
         listing.setDescription("test");
-        listing.setMake("test");
+        listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory("test");
-        listing.setSeller(member);
+        //listing.setSeller(member); 移除
         listing = listingRepository.save(listing);
 
         Listing newListing = new Listing();
         newListing.setId(listing.getId());
         newListing.setTitle("test");
         newListing.setDescription("test2");
-        newListing.setMake("test");
+        newListing.setMake(Make.CANON); //使用Make enum
         newListing.setModel("test");
         newListing.setPrice(12);
         newListing.setCategory("test");
@@ -191,11 +192,11 @@ public class ListingTest {
         Listing listing = new Listing();
         listing.setTitle("test");
         listing.setDescription("test");
-        listing.setMake("test");
+        listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory("test");
-        listing.setSeller(member);
+        //listing.setSeller(member); 移除
         listing = listingRepository.save(listing);
 
         mockMvc.perform(delete("/api/listings/" + listing.getId())
@@ -209,11 +210,11 @@ public class ListingTest {
         Listing listing = new Listing();
         listing.setTitle("test");
         listing.setDescription("test");
-        listing.setMake("test");
+        listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory("test");
-        listing.setSeller(member);
+        //listing.setSeller(member); 移除
         listing = listingRepository.save(listing);
 
         mockMvc.perform(delete("/api/listings/" + listing.getId())

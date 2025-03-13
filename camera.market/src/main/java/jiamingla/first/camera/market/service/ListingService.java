@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import jiamingla.first.camera.market.entity.Make;
 
 @Service
 public class ListingService {
@@ -40,6 +41,10 @@ public class ListingService {
     
         if (listing.getPrice() < 0) {
             throw new BusinessException("Price cannot be negative.");
+        }
+        //確認傳入的 make 是 enum 中的選項
+        if(!isValidMake(listing.getMake())){
+            throw new BusinessException("Make is not correct");
         }
     
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -75,6 +80,10 @@ public class ListingService {
         existingListing.setModel(listing.getModel());
         existingListing.setPrice(listing.getPrice());
         existingListing.setCategory(listing.getCategory());
+        //確認傳入的 make 是 enum 中的選項
+        if(!isValidMake(existingListing.getMake())){
+            throw new BusinessException("Make is not correct");
+        }
         return listingRepository.save(existingListing);
     }
 
@@ -96,5 +105,14 @@ public class ListingService {
 
     public List<Listing> getListingsByCategoryId(String category) {
         return listingRepository.findByCategory(category);
+    }
+     private boolean isValidMake(Make make) {
+        // 直接檢查 enum 中是否存在
+        for (Make validMake : Make.values()) {
+            if (validMake == make) {
+                return true;
+            }
+        }
+        return false;
     }
 }
