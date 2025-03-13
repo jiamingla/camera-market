@@ -45,7 +45,7 @@ public class Listing {
 
     @ManyToOne
     @JoinColumn(name = "seller_id")
-    @JsonIgnore
+    @JsonIgnore //add this line
     private Member seller;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")

@@ -36,7 +36,7 @@ public class ListingController {
         return new ResponseEntity<>(listing, HttpStatus.OK);
     }
 
-    @PutMapping
+    @PatchMapping
     public ResponseEntity<Listing> updateListing(@Valid @RequestBody Listing listing) {
         Listing updatedListing = listingService.updateListing(listing);
         return new ResponseEntity<>(updatedListing, HttpStatus.OK);

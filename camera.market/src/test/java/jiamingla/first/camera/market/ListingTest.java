@@ -132,7 +132,7 @@ public class ListingTest {
         newListing.setModel("test");
         newListing.setPrice(12);
         newListing.setCategory("test");
-        mockMvc.perform(put(apiListings)
+        mockMvc.perform(patch(apiListings) // Changed from put to patch
                         .header("Authorization", "Bearer " + token2)// Add the token to the Authorization header
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newListing)))
@@ -160,7 +160,7 @@ public class ListingTest {
         newListing.setPrice(12);
         newListing.setCategory("test");
 
-        mockMvc.perform(put("/api/listings")
+        mockMvc.perform(patch("/api/listings") // Changed from put to patch
                         .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newListing)))
