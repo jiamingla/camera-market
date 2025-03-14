@@ -1,26 +1,26 @@
 package jiamingla.first.camera.market.service;
 
-import jiamingla.first.camera.market.entity.Category; // 引入 Category enum
+import jiamingla.first.camera.market.entity.Category;
 import jiamingla.first.camera.market.entity.Listing;
 import jiamingla.first.camera.market.entity.ListingStatus;
 import jiamingla.first.camera.market.entity.Member;
+import jiamingla.first.camera.market.entity.Make;
 import jiamingla.first.camera.market.exception.BusinessException;
 import jiamingla.first.camera.market.exception.SystemException;
 import jiamingla.first.camera.market.repository.ListingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Transactional; // Import Transactional
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import jiamingla.first.camera.market.entity.Make;
 
 @Service
+//@Transactional //先移除這個標註
 public class ListingService {
 
     private static final Logger logger = LoggerFactory.getLogger(ListingService.class);
@@ -34,7 +34,6 @@ public class ListingService {
     @Transactional
     public Listing createListing(Listing listing) {
         logger.info("Attempting to create a new listing: {}", listing);
-        listing.setCreateTime(LocalDateTime.now());
         listing.setStatus(ListingStatus.OPEN);
 
         // Validate Listing fields
@@ -54,13 +53,17 @@ public class ListingService {
         return listingRepository.save(listing);
     }
 
+    @Transactional
     public List<Listing> getAllListings() {
         logger.info("Retrieving all listings.");
-        List<Listing> listings = listingRepository.findAll();
-        logger.info("Retrieved {} listings.", listings.size());
+        // Use sorting by lastUpdateTime in descending order
+        Sort sort = Sort.by(Sort.Direction.DESC, "lastUpdateTime");
+        List<Listing> listings = listingRepository.findAll(sort);
+        logger.info("Retrieved {} listings, sorted by lastUpdateTime (descending).", listings.size());
         return listings;
     }
 
+    @Transactional
     public Listing getListingById(Long id) {
         logger.info("Retrieving listing by ID: {}", id);
         Listing listing = listingRepository.findById(id)
@@ -97,7 +100,7 @@ public class ListingService {
             throw new BusinessException("Make is not correct");
         }
         //新增檢查category
-          if (!isValidCategory(existingListing.getCategory())) {
+        if (!isValidCategory(existingListing.getCategory())) {
             logger.error("Category is not correct.");
             throw new BusinessException("Category is not correct");
         }
@@ -122,6 +125,7 @@ public class ListingService {
         logger.info("Listing deleted successfully: {}", id);
     }
 
+    @Transactional
     public List<Listing> getListingsByStatus(ListingStatus status) {
         logger.info("Retrieving listings by status: {}", status);
         List<Listing> listings = listingRepository.findByStatus(status);
@@ -129,10 +133,11 @@ public class ListingService {
         return listings;
     }
 
+    @Transactional
     public List<Listing> getListingsByCategoryId(String category) {
         logger.info("Retrieving listings by category: {}", category);
-       //沒有辦法直接使用category enum，所以要再轉型一次。
-       Category categoryEnum = Category.valueOf(category);
+        //沒有辦法直接使用category enum，所以要再轉型一次。
+        Category categoryEnum = Category.valueOf(category);
         List<Listing> listings = listingRepository.findByCategory(categoryEnum);
         logger.info("Retrieved {} listings in category {}.", listings.size(), category);
         return listings;
@@ -150,7 +155,8 @@ public class ListingService {
         logger.warn("Make is not valid: {}", make);
         return false;
     }
-         private boolean isValidCategory(Category category) {
+
+    private boolean isValidCategory(Category category) {
         logger.debug("Validating category: {}", category);
         // 直接檢查 enum 中是否存在
         for (Category validCategory : Category.values()) {
@@ -178,16 +184,19 @@ public class ListingService {
             throw new BusinessException("Listing price cannot be negative");
         }
         //確認傳入的 make 是 enum 中的選項
-        if (!isValidMake(listing.getMake())) {
+        if (listing.getMake()==null||!isValidMake(listing.getMake())) {
             logger.error("Make is not correct.");
             throw new BusinessException("Make is not correct");
         }
         //新增檢查category
-        if (!isValidCategory(listing.getCategory())) {
+        if (listing.getCategory()==null||!isValidCategory(listing.getCategory())) {
             logger.error("Category is not correct.");
             throw new BusinessException("Category is not correct");
         }
-
+        if (listing.getModel()==null||listing.getModel().trim().isEmpty()) {
+            logger.error("Listing Model cannot be empty");
+            throw new BusinessException("Listing Model cannot be empty");
+        }
         logger.debug("Listing information check passed");
     }
 }

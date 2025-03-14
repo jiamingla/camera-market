@@ -12,12 +12,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import jiamingla.first.camera.market.entity.Make;
 
 import jakarta.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -74,6 +80,11 @@ public class ListingTest {
         String responseContent = loginResult.getResponse().getContentAsString();
         token = objectMapper.readTree(responseContent).get("token").asText();
         System.out.println("token: " + token);
+
+        // Manually set the Security Context for the test
+        UserDetails userDetails = new User(member.getUsername(), member.getPassword(), new ArrayList<>());
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @Test
@@ -90,7 +101,21 @@ public class ListingTest {
                         .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(listing)))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.title").value("test"))
+                .andExpect(jsonPath("$.description").value("test"))
+                .andExpect(jsonPath("$.make").value("CANON"))
+                .andExpect(jsonPath("$.model").value("test"))
+                .andExpect(jsonPath("$.price").value(12))
+                .andExpect(jsonPath("$.category").value("DSLR"))
+                .andExpect(jsonPath("$.status").value("OPEN"))
+                .andExpect(jsonPath("$.createTime").isNotEmpty())// 修改：使用 isEmpty() 檢查，因為我們無法確定時間
+                .andExpect(jsonPath("$.lastUpdateTime").isNotEmpty())// 修改：使用 isEmpty() 檢查，因為我們無法確定時間
+                .andExpect(jsonPath("$.createdBy").value(member.getUsername()))
+                .andExpect(jsonPath("$.lastModifiedBy").value(member.getUsername()))
+        ;
+
     }
 
     @Test
@@ -165,7 +190,9 @@ public class ListingTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newListing)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.description").value("test2"));
+                .andExpect(jsonPath("$.description").value("test2"))
+                .andExpect(jsonPath("$.lastUpdateTime").isNotEmpty()) //check update time has been updated
+                .andExpect(jsonPath("$.lastModifiedBy").value(member.getUsername()));//check update name has been updated
     }
 
     @Test
