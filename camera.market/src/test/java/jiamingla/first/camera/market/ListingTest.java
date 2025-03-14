@@ -1,6 +1,7 @@
 package jiamingla.first.camera.market;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jiamingla.first.camera.market.entity.Category; // 引入 Category enum
 import jiamingla.first.camera.market.entity.Listing;
 import jiamingla.first.camera.market.entity.Member;
 import jiamingla.first.camera.market.repository.ListingRepository;
@@ -11,12 +12,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import jiamingla.first.camera.market.entity.Make;
 
 import jakarta.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -73,6 +80,11 @@ public class ListingTest {
         String responseContent = loginResult.getResponse().getContentAsString();
         token = objectMapper.readTree(responseContent).get("token").asText();
         System.out.println("token: " + token);
+
+        // Manually set the Security Context for the test
+        UserDetails userDetails = new User(member.getUsername(), member.getPassword(), new ArrayList<>());
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @Test
@@ -83,14 +95,27 @@ public class ListingTest {
         listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
-        listing.setCategory("test");
-        //listing.setSeller(member); 移除
+        listing.setCategory(Category.DSLR);// 修改：使用 Category enum
 
         mockMvc.perform(post(apiListings)
                         .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(listing)))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.title").value("test"))
+                .andExpect(jsonPath("$.description").value("test"))
+                .andExpect(jsonPath("$.make").value("CANON"))
+                .andExpect(jsonPath("$.model").value("test"))
+                .andExpect(jsonPath("$.price").value(12))
+                .andExpect(jsonPath("$.category").value("DSLR"))
+                .andExpect(jsonPath("$.status").value("OPEN"))
+                .andExpect(jsonPath("$.createTime").isNotEmpty())// 修改：使用 isEmpty() 檢查，因為我們無法確定時間
+                .andExpect(jsonPath("$.lastUpdateTime").isNotEmpty())// 修改：使用 isEmpty() 檢查，因為我們無法確定時間
+                .andExpect(jsonPath("$.createdBy").value(member.getUsername()))
+                .andExpect(jsonPath("$.lastModifiedBy").value(member.getUsername()))
+        ;
+
     }
 
     @Test
@@ -120,7 +145,7 @@ public class ListingTest {
         listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
-        listing.setCategory("test");
+        listing.setCategory(Category.DSLR); // 修改：使用 Category enum
         listing.setSeller(member);
         listing = listingRepository.save(listing);
 
@@ -131,7 +156,7 @@ public class ListingTest {
         newListing.setMake(Make.CANON); //使用Make enum
         newListing.setModel("test");
         newListing.setPrice(12);
-        newListing.setCategory("test");
+        newListing.setCategory(Category.DSLR);// 修改：使用 Category enum
         mockMvc.perform(patch(apiListings) // Changed from put to patch
                         .header("Authorization", "Bearer " + token2)// Add the token to the Authorization header
                         .contentType(MediaType.APPLICATION_JSON)
@@ -147,7 +172,7 @@ public class ListingTest {
         listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
-        listing.setCategory("test");
+        listing.setCategory(Category.DSLR);// 修改：使用 Category enum
         listing.setSeller(member);
         listing = listingRepository.save(listing);
 
@@ -158,14 +183,16 @@ public class ListingTest {
         newListing.setMake(Make.CANON); //使用Make enum
         newListing.setModel("test");
         newListing.setPrice(12);
-        newListing.setCategory("test");
+        newListing.setCategory(Category.DSLR);// 修改：使用 Category enum
 
         mockMvc.perform(patch("/api/listings") // Changed from put to patch
                         .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newListing)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.description").value("test2"));
+                .andExpect(jsonPath("$.description").value("test2"))
+                .andExpect(jsonPath("$.lastUpdateTime").isNotEmpty()) //check update time has been updated
+                .andExpect(jsonPath("$.lastModifiedBy").value(member.getUsername()));//check update name has been updated
     }
 
     @Test
@@ -195,7 +222,7 @@ public class ListingTest {
         listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
-        listing.setCategory("test");
+        listing.setCategory(Category.DSLR);// 修改：使用 Category enum
         listing.setSeller(member);
         listing = listingRepository.save(listing);
 
@@ -213,7 +240,7 @@ public class ListingTest {
         listing.setMake(Make.CANON); //使用Make enum
         listing.setModel("test");
         listing.setPrice(12);
-        listing.setCategory("test");
+        listing.setCategory(Category.DSLR);// 修改：使用 Category enum
         listing.setSeller(member);
         listing = listingRepository.save(listing);
 
@@ -221,5 +248,48 @@ public class ListingTest {
                         .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
                         )
                 .andExpect(status().isNoContent());
+    }
+    @Test
+    public void testCreateListingWithWrongCategory() throws Exception {
+        Listing listing = new Listing();
+        listing.setTitle("test");
+        listing.setDescription("test");
+        listing.setMake(Make.CANON); //使用Make enum
+        listing.setModel("test");
+        listing.setPrice(12);
+        listing.setCategory(null); //設定錯誤的category
+
+        mockMvc.perform(post(apiListings)
+                        .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(listing)))
+                .andExpect(status().isBadRequest());
+    }
+     @Test
+    public void testUpdateListingWithWrongCategory() throws Exception {
+        Listing listing = new Listing();
+        listing.setTitle("test");
+        listing.setDescription("test");
+        listing.setMake(Make.CANON); //使用Make enum
+        listing.setModel("test");
+        listing.setPrice(12);
+        listing.setCategory(Category.DSLR);// 修改：使用 Category enum
+        listing.setSeller(member);
+        listing = listingRepository.save(listing);
+
+        Listing newListing = new Listing();
+        newListing.setId(listing.getId());
+        newListing.setTitle("test");
+        newListing.setDescription("test2");
+        newListing.setMake(Make.CANON); //使用Make enum
+        newListing.setModel("test");
+        newListing.setPrice(12);
+        newListing.setCategory(null);// 修改：使用 Category enum
+
+        mockMvc.perform(patch("/api/listings") // Changed from put to patch
+                        .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(newListing)))
+                .andExpect(status().isBadRequest());
     }
 }
