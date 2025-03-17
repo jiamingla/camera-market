@@ -4,6 +4,9 @@ import jakarta.validation.Valid;
 import jiamingla.first.camera.market.dto.LoginRequest;
 import jiamingla.first.camera.market.dto.MemberResponse;
 import jiamingla.first.camera.market.entity.Member;
+import jiamingla.first.camera.market.entity.PasswordResetToken;
+import jiamingla.first.camera.market.exception.BusinessException;
+import jiamingla.first.camera.market.service.EmailService;
 import jiamingla.first.camera.market.service.MemberService;
 import jiamingla.first.camera.market.util.JwtUtil;
 import org.slf4j.Logger;
@@ -28,6 +31,9 @@ public class MemberController {
     private static final Logger logger = LoggerFactory.getLogger(MemberController.class);
     @Autowired
     private MemberService memberService;
+
+    @Autowired
+    private EmailService emailService;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -87,5 +93,50 @@ public class MemberController {
         response.setListings(member.getListings());
         logger.info("Returning Member With Listings, member: {}", response.getUsername());
         return ResponseEntity.ok(response);
+    }
+
+    // 忘記密碼 API
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+        logger.info("Forgot password request received for email: {}", email);
+        try {
+            //先取得member
+            Member member = memberService.findByEmail(email);
+            //為這個member產生token
+            memberService.createPasswordResetTokenForMember(member);
+            //因為createPasswordResetTokenForMember已經產生token並儲存到database了，所以現在要透過member去找到那個token
+            Optional<PasswordResetToken> optionalPasswordResetToken = memberService.getPasswordResetTokenByMember(member);
+
+            if(optionalPasswordResetToken.isEmpty()){
+                throw new BusinessException("Token create fail");
+            }
+            PasswordResetToken passwordResetToken = optionalPasswordResetToken.get();
+            //透過emailservice寄送email
+            emailService.sendPasswordResetEmail(member.getEmail(), passwordResetToken.getToken());
+            return ResponseEntity.ok("Password reset link sent to your email."); // 返回成功訊息
+        } catch (BusinessException e) {
+            logger.error("Error in forgot password: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());//返回錯誤訊息
+        } catch (Exception e) {
+            logger.error("Unexpected error in forgot password: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");//返回錯誤訊息
+        }
+    }
+
+    // 重置密碼 API
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestParam String token, @RequestParam String newPassword) {
+        logger.info("Reset password request received for token: {}", token);
+        try {
+            //重置密碼
+            memberService.resetPassword(token, newPassword);
+            return ResponseEntity.ok("Password reset successfully."); // 返回成功訊息
+        } catch (BusinessException e) {
+            logger.error("Error in reset password: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());//返回錯誤訊息
+        } catch (Exception e) {
+            logger.error("Unexpected error in reset password: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");//返回錯誤訊息
+        }
     }
 }

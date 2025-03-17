@@ -34,7 +34,7 @@ public class SecurityConfig {
                 .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(new BasicAuthenticationEntryPoint())) // 添加這一行
                 //設定API的權限, 先通過permitAll, 再通過authenticated, 最後才檢查JwtRequestFilter
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/members/register", "/api/members/login").permitAll() // 允許註冊和登錄接口不需要token
+                        .requestMatchers("/api/members/register", "/api/members/login", "/api/members/forgot-password","/api/members/reset-password").permitAll() // 允許註冊和登錄接口不需要token
                         .requestMatchers(HttpMethod.GET, "/api/listings/**").permitAll() // 允許 GET /api/listings/** 不需要 token
                         .anyRequest().authenticated() // 其他所有請求都需要通過驗證
                 )
