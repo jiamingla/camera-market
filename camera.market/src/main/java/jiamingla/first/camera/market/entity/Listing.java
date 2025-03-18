@@ -1,12 +1,13 @@
 package jiamingla.first.camera.market.entity;
 
 import java.time.LocalDateTime;
+import java.util.List; // 引入 List
 
-import org.springframework.data.annotation.CreatedBy; // 新增
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy; // 新增
+import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener; //新增
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -14,10 +15,12 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 
 @Entity
 @Data
-@EntityListeners(AuditingEntityListener.class)//新增
+@EntityListeners(AuditingEntityListener.class)
 public class Listing {
 
     @Id
@@ -30,9 +33,8 @@ public class Listing {
     @NotBlank(message = "Description is required")
     private String description;
 
-    // 欄位類型修改為 Make Enum
     @NotNull(message = "Make is required")
-    @Enumerated(EnumType.STRING) // 用於標示這個欄位在資料庫中以字串方式儲存，否則預設是數字
+    @Enumerated(EnumType.STRING)
     private Make make;
 
     @NotBlank(message = "Model is required")
@@ -41,33 +43,41 @@ public class Listing {
     @NotNull(message = "Price is required")
     private int price;
 
-    // 修改：將 category 的類型改為 Category enum
     @NotNull(message = "Category is required")
-    @Enumerated(EnumType.STRING) // 用於標示這個欄位在資料庫中以字串方式儲存，否則預設是數字
+    @Enumerated(EnumType.STRING)
     private Category category;
 
     @Enumerated(EnumType.STRING)
     private ListingStatus status = ListingStatus.OPEN;
 
-    // 修改：重新使用 @ManyToOne 和 @JoinColumn
-    @ManyToOne(fetch = FetchType.LAZY) // 建議使用 LAZY 加載
+    // 新增 ListingType 欄位
+    @NotNull(message = "ListingType is required")
+    @Enumerated(EnumType.STRING)
+    private ListingType type; // 新增：表示 Listing 的類型（徵求或拍賣）
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id")
     @JsonIgnore
     private Member seller;
 
+    // 新增 images 欄位
+    @OneToMany(mappedBy = "listing", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
+    @Cascade(CascadeType.DELETE) //刪除listing時，把圖片也刪除
+    private List<ListingImage> images;
+
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-    @Column(updatable = false) //設定新增後不可更新
-    @CreatedDate //在新增時自動新增時間
+    @Column(updatable = false)
+    @CreatedDate
     private LocalDateTime createTime;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-    @LastModifiedDate //在每次更新時自動更新時間
+    @LastModifiedDate
     private LocalDateTime lastUpdateTime;
 
-    @CreatedBy // 新增這行
+    @CreatedBy
     private String createdBy;
 
-    @LastModifiedBy // 新增這行
+    @LastModifiedBy
     private String lastModifiedBy;
 
     @Override
@@ -79,9 +89,12 @@ public class Listing {
                 ", make=" + make +
                 ", model='" + model + '\'' +
                 ", price=" + price +
-                ", category=" + category +  // 修改：顯示 Category enum
+                ", category=" + category +
                 ", status=" + status +
-                ", sellerId=" + (seller != null ? seller.getId() : null) + // 為了顯示sellerId
+                ", type=" + type + // 新增：輸出 ListingType
+                ", sellerId=" + (seller != null ? seller.getId() : null) +
+                //把images也加進來
+                ", images=" + (images != null ? images.toString() : "null")+
                 ", createTime=" + createTime +
                 ", lastUpdateTime=" + lastUpdateTime +
                 ", createdBy=" + createdBy +
