@@ -22,8 +22,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, nextTick } from 'vue'; // Import nextTick
 import { useRouter } from 'vue-router';
+import { useLoginStatus } from '../main'; // Import the reactive variable
 
 // 使用 ref 建立響應式變數
 const username = ref('');
@@ -50,6 +51,15 @@ const handleSubmit = async () => {
       const data = await response.json();
       // 儲存 token 到 localStorage 或 cookie
       localStorage.setItem('token', data.token);
+      console.log('Token set in localStorage:', data.token); // Add this line
+
+      // Update the reactive variable to trigger a re-render
+      useLoginStatus().setLoggedIn(true); // Update the ref
+      console.log('useLoginStatus updated to true'); // Add this line
+
+      // Wait for the next tick before navigating
+      await nextTick();
+      console.log('nextTick completed'); // Add this line
       // 導航到首頁或其他頁面
       router.push('/');
     } else {

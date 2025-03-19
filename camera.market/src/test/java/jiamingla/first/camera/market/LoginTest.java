@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jiamingla.first.camera.market.entity.Category;
 import jiamingla.first.camera.market.entity.Listing;
+import jiamingla.first.camera.market.entity.ListingType;
 import jiamingla.first.camera.market.entity.Member;
 import jiamingla.first.camera.market.repository.ListingRepository;
 import jiamingla.first.camera.market.repository.MemberRepository;
@@ -136,6 +137,7 @@ public class LoginTest {
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory(Category.ACCESSORY);
+        listing.setType(ListingType.SALE);
         // listing.setSeller(member); // Remove: Let the service handle this
         listingRepository.save(listing);
 
