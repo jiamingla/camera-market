@@ -22,3 +22,46 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# --- Frontend Specific Ignores ---
+
+# Node.js/npm
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-error.log*
+
+# Build output (e.g., React, Vue, Angular)
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Cache and temporary files
+.cache/
+.tmp/
+temp/
+tmp/
+
+# Dependency specific
+bower_components/
+
+# Env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Other common frontend files
+coverage/
