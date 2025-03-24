@@ -1,7 +1,8 @@
 package jiamingla.first.camera.market.entity;
 
 import java.time.LocalDateTime;
-import java.util.List; // 引入 List
+import java.util.List;
+import java.util.ArrayList;
 
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -50,20 +51,27 @@ public class Listing {
     @Enumerated(EnumType.STRING)
     private ListingStatus status = ListingStatus.OPEN;
 
-    // 新增 ListingType 欄位
     @NotNull(message = "ListingType is required")
     @Enumerated(EnumType.STRING)
-    private ListingType type; // 新增：表示 Listing 的類型（徵求或拍賣）
+    private ListingType type;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_id")
+    @JoinColumn(name = "member_id")
     @JsonIgnore
-    private Member seller;
+    private Member member;
 
-    // 新增 images 欄位
     @OneToMany(mappedBy = "listing", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
-    @Cascade(CascadeType.DELETE) //刪除listing時，把圖片也刪除
+    @Cascade(CascadeType.DELETE)
     private List<ListingImage> images;
+
+    // 新增 tags 欄位，使用 ManyToMany 關聯 Tag 實體
+    @ManyToMany(cascade = {jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.MERGE}) // 多對多關係
+    @JoinTable( // 指定中間表的資訊
+            name = "listing_tag", // 中間表的名稱
+            joinColumns = @JoinColumn(name = "listing_id"), // 在中間表中，指向 Listing 的外鍵欄位
+            inverseJoinColumns = @JoinColumn(name = "tag_id") // 在中間表中，指向 Tag 的外鍵欄位
+    )
+    private List<Tag> tags = new ArrayList<>(); // 初始化為空列表
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     @Column(updatable = false)
@@ -91,10 +99,11 @@ public class Listing {
                 ", price=" + price +
                 ", category=" + category +
                 ", status=" + status +
-                ", type=" + type + // 新增：輸出 ListingType
-                ", sellerId=" + (seller != null ? seller.getId() : null) +
-                //把images也加進來
-                ", images=" + (images != null ? images.toString() : "null")+
+                ", type=" + type +
+                ", memberId=" + (member != null ? member.getId() : null) +
+                ", images=" + (images != null ? images.toString() : "null") +
+                //把tags也加進來
+                ", tags=" + (tags != null ? tags.toString() : "null") +
                 ", createTime=" + createTime +
                 ", lastUpdateTime=" + lastUpdateTime +
                 ", createdBy=" + createdBy +

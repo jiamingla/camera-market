@@ -1,13 +1,10 @@
 package jiamingla.first.camera.market.service;
 
-import jiamingla.first.camera.market.entity.Category;
-import jiamingla.first.camera.market.entity.Listing;
-import jiamingla.first.camera.market.entity.ListingStatus;
-import jiamingla.first.camera.market.entity.Member;
-import jiamingla.first.camera.market.entity.Make;
+import jiamingla.first.camera.market.entity.*;
 import jiamingla.first.camera.market.exception.BusinessException;
 import jiamingla.first.camera.market.exception.SystemException;
 import jiamingla.first.camera.market.repository.ListingRepository;
+import jiamingla.first.camera.market.repository.TagRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,12 +12,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Import Transactional
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
-//@Transactional //先移除這個標註
 public class ListingService {
 
     private static final Logger logger = LoggerFactory.getLogger(ListingService.class);
@@ -30,6 +27,9 @@ public class ListingService {
 
     @Autowired
     private MemberService memberService;
+
+    @Autowired
+    private TagRepository tagRepository;
 
     @Transactional
     public Listing createListing(Listing listing) {
@@ -41,13 +41,15 @@ public class ListingService {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        Member seller = memberService.findByUsername(username)
+        Member member = memberService.findByUsername(username)
                 .orElseThrow(() -> {
                     logger.error("Seller not found with username: {}", username);
                     return new SystemException("Seller not found");
                 });
-        //直接設定seller就好
-        listing.setSeller(seller);
+        listing.setMember(member);
+
+        //處理tag
+        handleTags(listing);
 
         logger.info("Listing created successfully: {}", listing);
         return listingRepository.save(listing);
@@ -83,8 +85,7 @@ public class ListingService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        //現在可以直接使用getSeller()取得
-        if (!existingListing.getSeller().getUsername().equals(username)) {
+        if (!existingListing.getMember().getUsername().equals(username)) {
             logger.error("User {} is not the owner of listing {}.", username, listing.getId());
             throw new BusinessException("You can not edit other's listing.");
         }
@@ -93,13 +94,17 @@ public class ListingService {
         existingListing.setMake(listing.getMake());
         existingListing.setModel(listing.getModel());
         existingListing.setPrice(listing.getPrice());
-        existingListing.setCategory(listing.getCategory());//更新category
-        //確認傳入的 make 是 enum 中的選項
+        existingListing.setCategory(listing.getCategory());
+        //更新tag
+        existingListing.getTags().clear();
+        handleTags(listing);
+        existingListing.getTags().addAll(listing.getTags());
+
         if (!isValidMake(existingListing.getMake())) {
             logger.error("Make is not correct.");
             throw new BusinessException("Make is not correct");
         }
-        //新增檢查category
+
         if (!isValidCategory(existingListing.getCategory())) {
             logger.error("Category is not correct.");
             throw new BusinessException("Category is not correct");
@@ -117,7 +122,7 @@ public class ListingService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         //現在可以直接使用getSeller()取得
-        if (!existingListing.getSeller().getUsername().equals(username)) {
+        if (!existingListing.getMember().getUsername().equals(username)) {
             logger.error("User {} is not the owner of listing {}.", username, id);
             throw new BusinessException("You can not delete other's listing.");
         }
@@ -198,5 +203,16 @@ public class ListingService {
             throw new BusinessException("Listing Model cannot be empty");
         }
         logger.debug("Listing information check passed");
+    }
+    private void handleTags(Listing listing) {
+        if (listing.getTags() != null) {
+            for (Tag tag : listing.getTags()) {
+                // 檢查 tag 是否已存在，如果存在則使用已存在的 tag，避免重複建立
+                Optional<Tag> existingTag = tagRepository.findByName(tag.getName());
+                if (existingTag.isPresent()) {
+                    tag.setId(existingTag.get().getId());
+                }
+            }
+        }
     }
 }
