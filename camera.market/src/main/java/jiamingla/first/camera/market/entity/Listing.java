@@ -56,9 +56,9 @@ public class Listing {
     private ListingType type; // 新增：表示 Listing 的類型（徵求或拍賣）
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_id")
+    @JoinColumn(name = "member_id") // Changed to member_id
     @JsonIgnore
-    private Member seller;
+    private Member member; // Changed to member
 
     // 新增 images 欄位
     @OneToMany(mappedBy = "listing", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
@@ -92,7 +92,7 @@ public class Listing {
                 ", category=" + category +
                 ", status=" + status +
                 ", type=" + type + // 新增：輸出 ListingType
-                ", sellerId=" + (seller != null ? seller.getId() : null) +
+                ", memberId=" + (member != null ? member.getId() : null) +
                 //把images也加進來
                 ", images=" + (images != null ? images.toString() : "null")+
                 ", createTime=" + createTime +

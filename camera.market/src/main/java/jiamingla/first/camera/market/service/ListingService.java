@@ -41,13 +41,13 @@ public class ListingService {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        Member seller = memberService.findByUsername(username)
+        Member member = memberService.findByUsername(username)
                 .orElseThrow(() -> {
                     logger.error("Seller not found with username: {}", username);
                     return new SystemException("Seller not found");
                 });
         //直接設定seller就好
-        listing.setSeller(seller);
+        listing.setMember(member);
 
         logger.info("Listing created successfully: {}", listing);
         return listingRepository.save(listing);
@@ -84,7 +84,7 @@ public class ListingService {
         String username = authentication.getName();
 
         //現在可以直接使用getSeller()取得
-        if (!existingListing.getSeller().getUsername().equals(username)) {
+        if (!existingListing.getMember().getUsername().equals(username)) {
             logger.error("User {} is not the owner of listing {}.", username, listing.getId());
             throw new BusinessException("You can not edit other's listing.");
         }
@@ -117,7 +117,7 @@ public class ListingService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         //現在可以直接使用getSeller()取得
-        if (!existingListing.getSeller().getUsername().equals(username)) {
+        if (!existingListing.getMember().getUsername().equals(username)) {
             logger.error("User {} is not the owner of listing {}.", username, id);
             throw new BusinessException("You can not delete other's listing.");
         }

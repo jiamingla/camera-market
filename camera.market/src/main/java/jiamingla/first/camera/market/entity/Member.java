@@ -32,6 +32,6 @@ public class Member {
     private String email;
 
     @JsonIgnore //避免無限遞迴
-    @OneToMany(mappedBy = "seller")
+    @OneToMany(mappedBy = "member")
     private List<Listing> listings;
 }

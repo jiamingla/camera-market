@@ -163,7 +163,7 @@ public class ListingTest {
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory(Category.DSLR); // 修改：使用 Category enum
-        listing.setSeller(member);
+        listing.setMember(member);
         listing.setType(ListingType.SALE);
         listing = listingRepository.save(listing);
 
@@ -192,7 +192,7 @@ public class ListingTest {
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory(Category.DSLR);// 修改：使用 Category enum
-        listing.setSeller(member);
+        listing.setMember(member);
         listing.setType(ListingType.SALE);
         listing = listingRepository.save(listing);
 
@@ -244,7 +244,7 @@ public class ListingTest {
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory(Category.DSLR);// 修改：使用 Category enum
-        listing.setSeller(member);
+        listing.setMember(member);
         listing.setType(ListingType.SALE);
         listing = listingRepository.save(listing);
 
@@ -263,7 +263,7 @@ public class ListingTest {
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory(Category.DSLR);// 修改：使用 Category enum
-        listing.setSeller(member);
+        listing.setMember(member);
         listing.setType(ListingType.SALE);
         listing = listingRepository.save(listing);
 
@@ -298,7 +298,7 @@ public class ListingTest {
         listing.setModel("test");
         listing.setPrice(12);
         listing.setCategory(Category.DSLR);// 修改：使用 Category enum
-        listing.setSeller(member);
+        listing.setMember(member);
         listing.setType(ListingType.SALE);
         listing = listingRepository.save(listing);
 
