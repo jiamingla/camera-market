@@ -111,6 +111,14 @@ public class ListingTest {
         images.add(listingImage2);
         listing.setImages(images);
 
+        Tag tag1 = new Tag();
+        tag1.setName("二手");
+        listing.getTags().add(tag1);
+        Tag tag2 = new Tag();
+        tag2.setName("八成新");
+        listing.getTags().add(tag2);
+
+
         mockMvc.perform(post(apiListings)
                         .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
                         .contentType(MediaType.APPLICATION_JSON)
@@ -132,6 +140,8 @@ public class ListingTest {
                 //驗證圖片網址
                 .andExpect(jsonPath("$.images[0].imageUrl").value("https://test1.com"))
                 .andExpect(jsonPath("$.images[1].imageUrl").value("https://test2.com"))
+                .andExpect(jsonPath("$.tags[0].name").value("二手"))
+                .andExpect(jsonPath("$.tags[1].name").value("八成新"))
         ;
 
     }
