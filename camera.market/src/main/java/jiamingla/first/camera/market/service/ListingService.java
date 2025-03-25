@@ -13,6 +13,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.validation.Validator;
+import jakarta.validation.ConstraintViolation;
+import java.util.Set;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,6 +34,9 @@ public class ListingService {
     @Autowired
     private TagRepository tagRepository;
 
+    @Autowired
+    private Validator validator; // 注入 Validator
+
     @Transactional
     public Listing createListing(Listing listing) {
         logger.info("Attempting to create a new listing: {}", listing);
@@ -38,6 +44,8 @@ public class ListingService {
 
         // Validate Listing fields
         validateListing(listing);
+        //使用validator驗證
+        validateWithValidator(listing);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
@@ -99,6 +107,8 @@ public class ListingService {
         existingListing.getTags().clear();
         handleTags(listing);
         existingListing.getTags().addAll(listing.getTags());
+        //使用validator驗證
+        validateWithValidator(existingListing);
 
         if (!isValidMake(existingListing.getMake())) {
             logger.error("Make is not correct.");
@@ -213,6 +223,17 @@ public class ListingService {
                     tag.setId(existingTag.get().getId());
                 }
             }
+        }
+    }
+    private void validateWithValidator(Listing listing) {
+        Set<ConstraintViolation<Listing>> violations = validator.validate(listing);
+        if (!violations.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            for (ConstraintViolation<Listing> violation : violations) {
+                sb.append(violation.getMessage()).append("; ");
+            }
+            logger.error("Listing validation failed: {}", sb.toString());
+            throw new BusinessException("Listing validation failed: " + sb.toString());
         }
     }
 }

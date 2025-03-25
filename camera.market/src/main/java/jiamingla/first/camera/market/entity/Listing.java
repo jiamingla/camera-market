@@ -15,6 +15,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size; // 引入 Size 註解
 import lombok.Data;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
@@ -29,6 +31,7 @@ public class Listing {
     private Long id;
 
     @NotBlank(message = "Title is required")
+    @Size(max = 72, message = "A title can have at most 72 characters")
     private String title;
 
     @NotBlank(message = "Description is required")
@@ -42,6 +45,7 @@ public class Listing {
     private String model;
 
     @NotNull(message = "Price is required")
+    @PositiveOrZero(message = "Price cannot be negative")
     private int price;
 
     @NotNull(message = "Category is required")
@@ -61,7 +65,7 @@ public class Listing {
     private Member member;
 
     @OneToMany(mappedBy = "listing", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
-    @Cascade(CascadeType.DELETE)
+    @Cascade(CascadeType.REMOVE)
     private List<ListingImage> images;
 
     // 新增 tags 欄位，使用 ManyToMany 關聯 Tag 實體
@@ -71,6 +75,7 @@ public class Listing {
             joinColumns = @JoinColumn(name = "listing_id"), // 在中間表中，指向 Listing 的外鍵欄位
             inverseJoinColumns = @JoinColumn(name = "tag_id") // 在中間表中，指向 Tag 的外鍵欄位
     )
+    @Size(max = 10, message = "A listing can have at most 10 tags") // 限制 tags 列表的最大長度為 10
     private List<Tag> tags = new ArrayList<>(); // 初始化為空列表
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
