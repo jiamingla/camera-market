@@ -7,5 +7,7 @@ public enum TagType {
     COLOR,
     SIZE,
     LOCATION,
+    CONDITION, // 商品狀態
+    OTHER
     // 其他 tag type
 }

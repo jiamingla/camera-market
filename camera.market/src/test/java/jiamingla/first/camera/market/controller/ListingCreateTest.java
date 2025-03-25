@@ -45,9 +45,11 @@ public class ListingCreateTest extends BaseControllerTest {
 
         Tag tag1 = new Tag();
         tag1.setName("二手");
+        tag1.setType(TagType.CONDITION);
         listing.getTags().add(tag1);
         Tag tag2 = new Tag();
-        tag2.setName("八成新");
+        tag2.setName("新北市");
+        tag2.setType(TagType.LOCATION);
         listing.getTags().add(tag2);
 
         mockMvc.perform(post(API_LISTINGS)
@@ -70,8 +72,13 @@ public class ListingCreateTest extends BaseControllerTest {
                 .andExpect(jsonPath("$.lastModifiedBy").value(member.getUsername()))
                 .andExpect(jsonPath("$.images[0].imageUrl").value("https://test1.com"))
                 .andExpect(jsonPath("$.images[1].imageUrl").value("https://test2.com"))
+                // Verify Tag Details
+                .andExpect(jsonPath("$.tags[0].id").isNotEmpty())
                 .andExpect(jsonPath("$.tags[0].name").value("二手"))
-                .andExpect(jsonPath("$.tags[1].name").value("八成新"))
+                .andExpect(jsonPath("$.tags[0].type").value("CONDITION"))
+                .andExpect(jsonPath("$.tags[1].id").isNotEmpty())
+                .andExpect(jsonPath("$.tags[1].name").value("新北市"))
+                .andExpect(jsonPath("$.tags[1].type").value("LOCATION"))
         ;
     }
 

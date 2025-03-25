@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jiamingla.first.camera.market.entity.*;
 import jiamingla.first.camera.market.repository.ListingRepository;
 import jiamingla.first.camera.market.repository.MemberRepository;
+import jiamingla.first.camera.market.repository.TagRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -24,6 +25,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Transactional
 public class ListingUpdateTest extends BaseControllerTest {
+
+    @Autowired
+    private TagRepository tagRepository;
 
     @Test
     public void testUpdateListingByOther() throws Exception {
@@ -128,11 +132,144 @@ public class ListingUpdateTest extends BaseControllerTest {
         newListing.setPrice(12);
         newListing.setCategory(null);// 修改：使用 Category enum
 
-        mockMvc.perform(patch(API_LISTINGS) // Changed from put to patch
+        mockMvc.perform(patch(API_LISTINGS)
                         .header("Authorization", "Bearer " + token)// Add the token to the Authorization header
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newListing)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testAddTagsToExistingListing() throws Exception {
+        Listing listing = new Listing();
+        listing.setTitle("test");
+        listing.setDescription("test");
+        listing.setMake(Make.CANON);
+        listing.setModel("test");
+        listing.setPrice(12);
+        listing.setCategory(Category.DSLR);
+        listing.setMember(member);
+        listing.setType(ListingType.SALE);
+        listing = listingRepository.save(listing);
+
+        Tag tag1 = new Tag();
+        tag1.setName("二手");
+        tag1.setType(TagType.CONDITION);
+        tag1 = tagRepository.save(tag1);
+
+        Tag tag2 = new Tag();
+        tag2.setName("新北市");
+        tag2.setType(TagType.LOCATION);
+        tag2 = tagRepository.save(tag2);
+
+        Listing newListing = new Listing();
+        newListing.setId(listing.getId());
+        newListing.setTitle("test");
+        newListing.setDescription("test");
+        newListing.setMake(Make.CANON);
+        newListing.setModel("test");
+        newListing.setPrice(12);
+        newListing.setCategory(Category.DSLR);
+        newListing.setType(ListingType.SALE);
+        newListing.getTags().add(tag1);
+        newListing.getTags().add(tag2);
+
+        mockMvc.perform(patch(API_LISTINGS)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(newListing)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tags[0].id").value(tag1.getId()))
+                .andExpect(jsonPath("$.tags[0].name").value("二手"))
+                .andExpect(jsonPath("$.tags[0].type").value("CONDITION"))
+                .andExpect(jsonPath("$.tags[1].id").value(tag2.getId()))
+                .andExpect(jsonPath("$.tags[1].name").value("新北市"))
+                .andExpect(jsonPath("$.tags[1].type").value("LOCATION"));
+    }
+
+    @Test
+    public void testUpdateTagsOfExistingListing() throws Exception {
+        Listing listing = new Listing();
+        listing.setTitle("test");
+        listing.setDescription("test");
+        listing.setMake(Make.CANON);
+        listing.setModel("test");
+        listing.setPrice(12);
+        listing.setCategory(Category.DSLR);
+        listing.setMember(member);
+        listing.setType(ListingType.SALE);
+
+        Tag tag1 = new Tag();
+        tag1.setName("二手");
+        tag1.setType(TagType.CONDITION);
+        tag1 = tagRepository.save(tag1);
+        listing.getTags().add(tag1);
+
+        listing = listingRepository.save(listing);
+
+        Tag tag2 = new Tag();
+        tag2.setName("九成新");
+        tag2.setType(TagType.CONDITION);
+        tag2 = tagRepository.save(tag2);
+
+        Listing newListing = new Listing();
+        newListing.setId(listing.getId());
+        newListing.setTitle("test");
+        newListing.setDescription("test");
+        newListing.setMake(Make.CANON);
+        newListing.setModel("test");
+        newListing.setPrice(12);
+        newListing.setCategory(Category.DSLR);
+        newListing.setType(ListingType.SALE);
+        newListing.getTags().add(tag2);
+
+        mockMvc.perform(patch(API_LISTINGS)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(newListing)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tags[0].id").value(tag2.getId()))
+                .andExpect(jsonPath("$.tags[0].name").value("九成新"))
+                .andExpect(jsonPath("$.tags[0].type").value("CONDITION"));
+    }
+
+    @Test
+    public void testDeleteTagsOfExistingListing() throws Exception {
+        Listing listing = new Listing();
+        listing.setTitle("test");
+        listing.setDescription("test");
+        listing.setMake(Make.CANON);
+        listing.setModel("test");
+        listing.setPrice(12);
+        listing.setCategory(Category.DSLR);
+        listing.setMember(member);
+        listing.setType(ListingType.SALE);
+
+        Tag tag1 = new Tag();
+        tag1.setName("二手");
+        tag1.setType(TagType.CONDITION);
+        tag1 = tagRepository.save(tag1);
+        listing.getTags().add(tag1);
+
+        listing = listingRepository.save(listing);
+
+        Listing newListing = new Listing();
+        newListing.setId(listing.getId());
+        newListing.setTitle("test");
+        newListing.setDescription("test");
+        newListing.setMake(Make.CANON);
+        newListing.setModel("test");
+        newListing.setPrice(12);
+        newListing.setCategory(Category.DSLR);
+        newListing.setType(ListingType.SALE);
+        newListing.setTags(new ArrayList<>()); // Remove all tags
+
+        mockMvc.perform(patch(API_LISTINGS)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(newListing)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tags").isEmpty());
     }
 
 }
