@@ -56,14 +56,4 @@ public class MemberService {
             return new SystemException("Member not found with ID: " + id);
         });
     }
-    public Optional<Member> getMemberWithListings(Long id){
-        logger.info("Get Member With Listings by Id: {}", id);
-        Optional<Member> member = memberRepository.findById(id);
-        if(member.isEmpty()){
-            logger.warn("Cannot find member {}", id);
-        }else{
-            logger.debug("Member found: {}", id);
-        }
-        return member;
-    }
 }
