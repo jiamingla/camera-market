@@ -72,10 +72,10 @@ public class MemberController {
     }
 
     @GetMapping("/member/{id}")
-    public ResponseEntity<?> getMemberWithListings(@PathVariable Long id){
+    public ResponseEntity<?> getMemberWithListings(@PathVariable Long id) {
         logger.info("Received request to get Member With Listings, id: {}", id);
         Optional<Member> optionalMember = memberService.getMemberWithListings(id);
-        if(optionalMember.isEmpty()){
+        if (optionalMember.isEmpty()) {
             logger.warn("Cannot find member: {}", id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cannot find member");
         }
