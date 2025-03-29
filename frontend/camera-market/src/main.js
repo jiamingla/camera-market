@@ -11,7 +11,42 @@ app.use(createPinia());
 app.use(router); // Use the router
 
 // Create a reactive variable to hold the login status
-const isLoggedInRef = ref(localStorage.getItem('token') !== null);
+const isLoggedInRef = ref(false); // Initialize to false
+
+// Function to check token validity
+const checkTokenValidity = async () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    isLoggedInRef.value = false;
+    return;
+  }
+
+  try {
+    // Send a request to the server to validate the token
+    const response = await fetch('/api/members/validate', { // Use the new validation endpoint
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (response.ok) {
+      isLoggedInRef.value = true;
+    } else {
+      // Token is invalid, remove it from localStorage
+      localStorage.removeItem('token');
+      isLoggedInRef.value = false;
+    }
+  } catch (error) {
+    console.error('Error validating token:', error);
+    // Handle network errors or other issues
+    localStorage.removeItem('token');
+    isLoggedInRef.value = false;
+  }
+};
+
+// Call the function to check token validity on app startup
+checkTokenValidity();
 
 // Create a computed property to derive the login status
 const loginStatus = computed(() => {

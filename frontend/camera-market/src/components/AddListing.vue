@@ -6,43 +6,65 @@
       <div class="form-group">
         <label for="title">標題:</label>
         <input type="text" id="title" v-model="listing.title" required />
+        <div v-if="errors.title" class="error-message">{{ errors.title }}</div>
         <!-- v-model 雙向綁定標題 -->
       </div>
       <div class="form-group">
         <label for="description">描述:</label>
         <textarea id="description" v-model="listing.description" required></textarea>
+        <div v-if="errors.description" class="error-message">{{ errors.description }}</div>
         <!-- v-model 雙向綁定描述 -->
       </div>
       <div class="form-group">
         <label for="make">廠牌:</label>
         <select id="make" v-model="listing.make" required>
+          <option value="" disabled>請選擇廠牌</option>
           <option v-for="make in makes" :key="make" :value="make">{{ make }}</option>
         </select>
+        <div v-if="errors.make" class="error-message">{{ errors.make }}</div>
         <!-- v-model 雙向綁定廠牌 -->
       </div>
       <div class="form-group">
         <label for="model">型號:</label>
         <input type="text" id="model" v-model="listing.model" required />
+        <div v-if="errors.model" class="error-message">{{ errors.model }}</div>
         <!-- v-model 雙向綁定型號 -->
       </div>
       <div class="form-group">
         <label for="price">價格:</label>
         <input type="number" id="price" v-model="listing.price" required />
+        <div v-if="errors.price" class="error-message">{{ errors.price }}</div>
         <!-- v-model 雙向綁定價格 -->
       </div>
       <div class="form-group">
         <label for="category">類別:</label>
         <select id="category" v-model="listing.category" required>
+          <option value="" disabled>請選擇類別</option>
           <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
         </select>
+        <div v-if="errors.category" class="error-message">{{ errors.category }}</div>
         <!-- v-model 雙向綁定類別 -->
       </div>
       <div class="form-group">
         <label for="type">類型:</label>
         <select id="type" v-model="listing.type" required>
+          <option value="" disabled>請選擇類型</option>
           <option v-for="type in types" :key="type" :value="type">{{ type }}</option>
         </select>
+        <div v-if="errors.type" class="error-message">{{ errors.type }}</div>
         <!-- v-model 雙向綁定類型 -->
+      </div>
+      <div class="form-group">
+        <label for="tags">標籤 (最多 10 個):</label>
+        <input type="text" id="tags" v-model="newTag" @keyup.enter="addTag" />
+        <button type="button" @click="addTag">新增標籤</button>
+        <div v-if="errors.tags" class="error-message">{{ errors.tags }}</div>
+        <div class="tags-container">
+          <span v-for="(tag, index) in listing.tags" :key="index" class="tag">
+            {{ tag.name }}
+            <button type="button" @click="removeTag(index)" class="remove-tag">X</button>
+          </span>
+        </div>
       </div>
       <button type="submit">新增商品</button>
       <!-- 提交按鈕 -->
@@ -79,6 +101,7 @@ const listing = ref({
   price: null,
   category: '', // will be enum
   type: '', // will be enum
+  tags: [], // 新增 tags 陣列, 每個 tag 是一個 { name: 'tag name' } 物件
 });
 
 // 用於顯示成功訊息
@@ -87,10 +110,24 @@ const successMessage = ref('');
 const errorMessage = ref('');
 // 用於儲存後端返回的 Listing 物件
 const createdListing = ref(null);
+// 用於儲存錯誤訊息
+const errors = ref({});
+// 用於新增標籤
+const newTag = ref('');
 
 // Enum values
-const makes = ref(['CANON', 'NIKON', 'SONY', 'FUJIFILM', 'PANASONIC', 'OLYMPUS', 'LEICA']);
-const categories = ref(['DSLR', 'LENS', 'ACCESSORY']);
+const makes = ref(['CANON', 'NIKON', 'SONY', 'FUJIFILM', "OLYMPUS", "PANASONIC", "RICOH", "SIGMA", "LEICA", "HASSELBLAD", "DJI", "OTHER"]);
+const categories = ref([
+    'DSLR', // 單眼相機
+    'MIRRORLESS', // 無反相機
+    'COMPACT', // 輕便相機
+    'FILM', // 底片相機
+    'LENS', // 鏡頭
+    'TRIPOD', // 腳架
+    'ACCESSORY', // 配件
+    'BAG', // 相機包
+    'OTHER', // 其他
+    ]);
 const types = ref(['SALE', 'WANTED']);
 
 // 處理表單提交
@@ -99,6 +136,7 @@ const handleSubmit = async () => {
   successMessage.value = '';
   errorMessage.value = '';
   createdListing.value = null; // 清空 createdListing
+  errors.value = {}; // 清空錯誤訊息
 
   try {
     // 從 localStorage 取得 token
@@ -112,6 +150,14 @@ const handleSubmit = async () => {
       return; // 停止執行
     }
 
+
+    // Transform tags to the required format
+    const transformedListing = {
+      ...listing.value,
+      tags: listing.value.tags.map(tag => ({ name: tag.name })),
+    };
+
+    // console.log('transformedListing', JSON.stringify(transformedListing));
     // 發送 API 請求
     const response = await fetch('/api/listings', {
       method: 'POST', // 使用 POST 方法
@@ -119,7 +165,7 @@ const handleSubmit = async () => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`, // 在 header 中加入 token
       },
-      body: JSON.stringify(listing.value), // 將商品資料轉換為 JSON 字串
+      body: JSON.stringify(transformedListing), // 將商品資料轉換為 JSON 字串
     });
 
     // 判斷 API 請求是否成功
@@ -137,6 +183,7 @@ const handleSubmit = async () => {
         price: null,
         category: '',
         type: '',
+        tags: [],
       };
       // Optionally, redirect to login page after a delay
       setTimeout(() => {
@@ -145,13 +192,33 @@ const handleSubmit = async () => {
     } else {
       // 如果 API 請求失敗，顯示錯誤訊息
       const errorData = await response.json();
-      errorMessage.value = errorData.message || '新增商品失敗。';
+      if (response.status === 400) {
+        errors.value = errorData;
+      } else {
+        errorMessage.value = errorData.message || '新增商品失敗。';
+      }
     }
   } catch (error) {
     // 如果發生錯誤，顯示錯誤訊息
     console.error('新增商品請求錯誤:', error);
     errorMessage.value = '新增商品請求發生錯誤，請稍後再試。';
   }
+};
+
+// 新增標籤
+const addTag = () => {
+  if (newTag.value.trim() !== '' && listing.value.tags.length < 10) {
+    listing.value.tags.push({ name: newTag.value.trim() }); // Push an object with a name property
+    newTag.value = '';
+    errors.value.tags = null;
+  } else if (listing.value.tags.length >= 10) {
+    errors.value.tags = "A listing can have at most 10 tags";
+  }
+};
+
+// 移除標籤
+const removeTag = (index) => {
+  listing.value.tags.splice(index, 1);
 };
 </script>
 
@@ -212,5 +279,28 @@ button {
   border: 1px solid #ccc;
   padding: 10px;
   border-radius: 4px;
+}
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.tag {
+  background-color: #e0e0e0;
+  padding: 5px 10px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.remove-tag {
+  background-color: transparent;
+  border: none;
+  color: red;
+  cursor: pointer;
+  margin-left: 5px;
+  padding: 0;
 }
 </style>
