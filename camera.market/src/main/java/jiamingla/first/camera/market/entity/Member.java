@@ -33,5 +33,6 @@ public class Member {
     private String email;
 
     @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+    @JsonIgnore // Add this line
     private List<Listing> listings = new ArrayList<>();
 }

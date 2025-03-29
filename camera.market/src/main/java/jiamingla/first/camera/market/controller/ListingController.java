@@ -1,8 +1,11 @@
 package jiamingla.first.camera.market.controller;
 
 import jakarta.validation.Valid;
+import jiamingla.first.camera.market.dto.ListingSummaryDto;
+import jiamingla.first.camera.market.dto.MemberSummaryDto;
 import jiamingla.first.camera.market.entity.Listing;
 import jiamingla.first.camera.market.entity.ListingStatus;
+import jiamingla.first.camera.market.entity.Member;
 import jiamingla.first.camera.market.service.ListingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/listings")
@@ -35,11 +39,15 @@ public class ListingController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Listing>> getAllListings() {
+    public ResponseEntity<List<ListingSummaryDto>> getAllListings() {
         logger.info("Received request to get all listings.");
         List<Listing> listings = listingService.getAllListings();
-        logger.info("Returning {} listings.", listings.size());
-        return new ResponseEntity<>(listings, HttpStatus.OK);
+        // Convert Listing to ListingSummaryDto
+        List<ListingSummaryDto> listingSummaryDtos = listings.stream()
+                .map(this::convertToListingSummaryDto)
+                .collect(Collectors.toList());
+        logger.info("Returning {} listing summaries.", listingSummaryDtos.size());
+        return new ResponseEntity<>(listingSummaryDtos, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
@@ -67,19 +75,25 @@ public class ListingController {
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Listing>> getListingsByStatus(@PathVariable ListingStatus status) {
+    public ResponseEntity<List<ListingSummaryDto>> getListingsByStatus(@PathVariable ListingStatus status) {
         logger.info("Received request to get listings by status: {}", status);
         List<Listing> listings = listingService.getListingsByStatus(status);
-        logger.info("Returning {} listings with status {}.", listings.size(), status);
-        return new ResponseEntity<>(listings, HttpStatus.OK);
+        List<ListingSummaryDto> listingSummaryDtos = listings.stream()
+                .map(this::convertToListingSummaryDto)
+                .collect(Collectors.toList());
+        logger.info("Returning {} listings with status {}.", listingSummaryDtos.size(), status);
+        return new ResponseEntity<>(listingSummaryDtos, HttpStatus.OK);
     }
 
     @GetMapping("/category/{category}")
-    public ResponseEntity<List<Listing>> getListingsByCategoryId(@PathVariable String category) {
+    public ResponseEntity<List<ListingSummaryDto>> getListingsByCategoryId(@PathVariable String category) {
         logger.info("Received request to get listings by category: {}", category);
         List<Listing> listings = listingService.getListingsByCategoryId(category);
-        logger.info("Returning {} listings in category {}.", listings.size(), category);
-        return new ResponseEntity<>(listings, HttpStatus.OK);
+        List<ListingSummaryDto> listingSummaryDtos = listings.stream()
+                .map(this::convertToListingSummaryDto)
+                .collect(Collectors.toList());
+        logger.info("Returning {} listings in category {}.", listingSummaryDtos.size(), category);
+        return new ResponseEntity<>(listingSummaryDtos, HttpStatus.OK);
     }
 
     // 新增異常處理器
@@ -93,5 +107,28 @@ public class ListingController {
             errors.put(fieldName, errorMessage);
         });
         return errors;
+    }
+
+    // Helper method to convert Listing to ListingSummaryDto
+    private ListingSummaryDto convertToListingSummaryDto(Listing listing) {
+        ListingSummaryDto dto = new ListingSummaryDto();
+        dto.setId(listing.getId());
+        dto.setTitle(listing.getTitle());
+        dto.setMake(listing.getMake());
+        dto.setPrice(listing.getPrice());
+        dto.setStatus(listing.getStatus());
+        dto.setType(listing.getType());
+
+        // Convert Member to MemberSummaryDto
+        Member member = listing.getMember();
+        if (member != null) {
+            MemberSummaryDto memberDto = new MemberSummaryDto();
+            memberDto.setId(member.getId());
+            memberDto.setUsername(member.getUsername());
+            dto.setMember(memberDto);
+        }
+
+        dto.setLastUpdateTime(listing.getLastUpdateTime());
+        return dto;
     }
 }
