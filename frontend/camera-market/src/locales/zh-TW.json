@@ -1,0 +1,29 @@
+{
+  "addListing": {
+    "title": "新增商品",
+    "titleLabel": "標題",
+    "descriptionLabel": "描述",
+    "makeLabel": "廠牌",
+    "selectMake": "請選擇廠牌",
+    "modelLabel": "型號",
+    "priceLabel": "價格",
+    "categoryLabel": "類別",
+    "selectCategory": "請選擇類別",
+    "typeLabel": "類型",
+    "selectType": "請選擇類型",
+    "tagsLabel": "標籤",
+    "maxTags": "最多 10 個",
+    "addTag": "新增標籤",
+    "submit": "新增商品",
+    "sale": "售",
+    "wanted": "徵",
+    "success": "商品新增成功！",
+    "failure": "新增商品失敗。",
+    "requestError": "新增商品請求發生錯誤，請稍後再試。",
+    "loginRequired": "請先登入",
+    "sellerInfo": "商品發布者資訊",
+    "sellerId": "發布者 ID",
+    "sellerName": "發布者名稱",
+    "maxTagsError": "A listing can have at most 10 tags"
+  }
+}

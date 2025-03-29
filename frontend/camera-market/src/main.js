@@ -4,6 +4,18 @@ import { createApp, computed, ref } from 'vue'; // Import ref
 import { createPinia } from 'pinia';
 import App from './App.vue';
 import router from './router'; // Import the router
+import { createI18n } from 'vue-i18n';
+import zhTW from './locales/zh-TW.json';
+import en from './locales/en.json';
+
+const i18n = createI18n({
+  locale: 'zh-TW', // Default locale
+  fallbackLocale: 'en', // Fallback locale
+  messages: {
+    'zh-TW': zhTW,
+    en: en,
+  },
+});
 
 const app = createApp(App);
 
@@ -63,5 +75,5 @@ export function useLoginStatus() {
     },
   };
 }
-
+app.use(i18n);
 app.mount('#app');

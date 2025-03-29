@@ -1,63 +1,63 @@
 <template>
   <div class="add-listing-container">
-    <h2>新增商品</h2>
+    <h2>{{ $t('addListing.title') }}</h2>
     <form @submit.prevent="handleSubmit">
       <!-- @submit.prevent 防止頁面刷新 -->
       <div class="form-group">
-        <label for="title">標題:</label>
+        <label for="title">{{ $t('addListing.titleLabel') }}:</label>
         <input type="text" id="title" v-model="listing.title" required />
         <div v-if="errors.title" class="error-message">{{ errors.title }}</div>
         <!-- v-model 雙向綁定標題 -->
       </div>
       <div class="form-group">
-        <label for="description">描述:</label>
+        <label for="description">{{ $t('addListing.descriptionLabel') }}:</label>
         <textarea id="description" v-model="listing.description" required></textarea>
         <div v-if="errors.description" class="error-message">{{ errors.description }}</div>
         <!-- v-model 雙向綁定描述 -->
       </div>
       <div class="form-group">
-        <label for="make">廠牌:</label>
+        <label for="make">{{ $t('addListing.makeLabel') }}:</label>
         <select id="make" v-model="listing.make" required>
-          <option value="" disabled>請選擇廠牌</option>
+          <option value="" disabled>{{ $t('addListing.selectMake') }}</option>
           <option v-for="make in makes" :key="make" :value="make">{{ make }}</option>
         </select>
         <div v-if="errors.make" class="error-message">{{ errors.make }}</div>
         <!-- v-model 雙向綁定廠牌 -->
       </div>
       <div class="form-group">
-        <label for="model">型號:</label>
+        <label for="model">{{ $t('addListing.modelLabel') }}:</label>
         <input type="text" id="model" v-model="listing.model" required />
         <div v-if="errors.model" class="error-message">{{ errors.model }}</div>
         <!-- v-model 雙向綁定型號 -->
       </div>
       <div class="form-group">
-        <label for="price">價格:</label>
+        <label for="price">{{ $t('addListing.priceLabel') }}:</label>
         <input type="number" id="price" v-model="listing.price" required />
         <div v-if="errors.price" class="error-message">{{ errors.price }}</div>
         <!-- v-model 雙向綁定價格 -->
       </div>
       <div class="form-group">
-        <label for="category">類別:</label>
+        <label for="category">{{ $t('addListing.categoryLabel') }}:</label>
         <select id="category" v-model="listing.category" required>
-          <option value="" disabled>請選擇類別</option>
+          <option value="" disabled>{{ $t('addListing.selectCategory') }}</option>
           <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
         </select>
         <div v-if="errors.category" class="error-message">{{ errors.category }}</div>
         <!-- v-model 雙向綁定類別 -->
       </div>
       <div class="form-group">
-        <label for="type">類型:</label>
+        <label for="type">{{ $t('addListing.typeLabel') }}:</label>
         <select id="type" v-model="listing.type" required>
-          <option value="" disabled>請選擇類型</option>
-          <option v-for="type in types" :key="type" :value="type">{{ type }}</option>
+          <option value="" disabled>{{ $t('addListing.selectType') }}</option>
+          <option v-for="type in localizedTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
         </select>
         <div v-if="errors.type" class="error-message">{{ errors.type }}</div>
         <!-- v-model 雙向綁定類型 -->
       </div>
       <div class="form-group">
-        <label for="tags">標籤 (最多 10 個):</label>
+        <label for="tags">{{ $t('addListing.tagsLabel') }} ({{ $t('addListing.maxTags') }}):</label>
         <input type="text" id="tags" v-model="newTag" @keyup.enter="addTag" />
-        <button type="button" @click="addTag">新增標籤</button>
+        <button type="button" @click="addTag">{{ $t('addListing.addTag') }}</button>
         <div v-if="errors.tags" class="error-message">{{ errors.tags }}</div>
         <div class="tags-container">
           <span v-for="(tag, index) in listing.tags" :key="index" class="tag">
@@ -66,7 +66,7 @@
           </span>
         </div>
       </div>
-      <button type="submit">新增商品</button>
+      <button type="submit">{{ $t('addListing.submit') }}</button>
       <!-- 提交按鈕 -->
     </form>
     <div v-if="successMessage" class="success-message">
@@ -79,18 +79,20 @@
     </div>
     <!-- 顯示 seller 資訊 -->
     <div v-if="createdListing && createdListing.seller" class="seller-info">
-      <h3>商品發布者資訊</h3>
-      <p>發布者 ID: {{ createdListing.seller.id }}</p>
-      <p>發布者名稱: {{ createdListing.seller.username }}</p>
+      <h3>{{ $t('addListing.sellerInfo') }}</h3>
+      <p>{{ $t('addListing.sellerId') }}: {{ createdListing.seller.id }}</p>
+      <p>{{ $t('addListing.sellerName') }}: {{ createdListing.seller.username }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
+const { t } = useI18n();
 
 // 使用 ref 建立響應式變數，用於儲存商品資料
 const listing = ref({
@@ -128,7 +130,15 @@ const categories = ref([
     'BAG', // 相機包
     'OTHER', // 其他
     ]);
-const types = ref(['SALE', 'WANTED']);
+// const types = ref(['SALE', 'WANTED']); // Removed the original types
+
+// Localized types
+const localizedTypes = computed(() => {
+  return [
+    { value: 'SALE', label: t('addListing.sale') },
+    { value: 'WANTED', label: t('addListing.wanted') },
+  ];
+});
 
 // 處理表單提交
 const handleSubmit = async () => {
@@ -145,7 +155,7 @@ const handleSubmit = async () => {
 
     // 如果沒有 token，表示使用者未登入
     if (!token) {
-      errorMessage.value = '請先登入';
+      errorMessage.value = t('addListing.loginRequired');
       console.error('使用者未登入');
       return; // 停止執行
     }
@@ -170,7 +180,7 @@ const handleSubmit = async () => {
 
     // 判斷 API 請求是否成功
     if (response.ok) {
-      successMessage.value = '商品新增成功！';
+      successMessage.value = t('addListing.success');
       // 取得後端返回的 Listing 物件
       createdListing.value = await response.json();
       console.log('createdListing', createdListing.value);
@@ -195,13 +205,13 @@ const handleSubmit = async () => {
       if (response.status === 400) {
         errors.value = errorData;
       } else {
-        errorMessage.value = errorData.message || '新增商品失敗。';
+        errorMessage.value = errorData.message || t('addListing.failure');
       }
     }
   } catch (error) {
     // 如果發生錯誤，顯示錯誤訊息
     console.error('新增商品請求錯誤:', error);
-    errorMessage.value = '新增商品請求發生錯誤，請稍後再試。';
+    errorMessage.value = t('addListing.requestError');
   }
 };
 
@@ -212,7 +222,7 @@ const addTag = () => {
     newTag.value = '';
     errors.value.tags = null;
   } else if (listing.value.tags.length >= 10) {
-    errors.value.tags = "A listing can have at most 10 tags";
+    errors.value.tags = t('addListing.maxTagsError');
   }
 };
 
