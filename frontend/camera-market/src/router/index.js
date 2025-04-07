@@ -1,7 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
+import ListingDetail from '../views/ListingDetail.vue'; // Import the ListingDetail component
+import EditListing from '../views/EditListing.vue'; // Adjust the path if necessary
+
+
 import Login from '../components/Login.vue';
 import Register from '../components/Register.vue'; // Import the Register component
+
 import AddListing from '../components/AddListing.vue';
 import { useLoginStatus } from '../main'; // Import the reactive variable
 
@@ -24,6 +29,12 @@ const router = createRouter({
       component: Register, // Use the Register component
     },
     {
+      path: '/listings/:id', // :id is a dynamic segment
+      name: 'ListingDetail',
+      component: ListingDetail,
+      props: true, // Pass route params as props to the component
+    },
+    {
       path: '/add-listing',
       name: 'addListing',
       component: AddListing,
@@ -35,6 +46,12 @@ const router = createRouter({
           next('/login'); // Redirect to login
         }
       },
+    },
+    {
+      path: '/listings/:id/edit',
+      name: 'EditListing',
+      component: EditListing,
+      props: true, // If you want to pass the id as a prop
     }
   ],
 });

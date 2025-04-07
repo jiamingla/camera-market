@@ -25,5 +25,33 @@
     "sellerId": "發布者 ID",
     "sellerName": "發布者名稱",
     "maxTagsError": "A listing can have at most 10 tags"
+  },
+  "deleteListing": {
+    "confirm": "確定要刪除這個商品嗎？",
+    "success": "商品刪除成功！",
+    "failure": "刪除商品失敗。",
+    "requestError": "刪除商品請求發生錯誤，請稍後再試。"
+  },
+  "editListing": {
+    "title": "編輯商品",
+    "titleLabel": "標題",
+    "descriptionLabel": "描述",
+    "makeLabel": "廠牌",
+    "selectMake": "請選擇廠牌",
+    "modelLabel": "型號",
+    "priceLabel": "價格",
+    "categoryLabel": "類別",
+    "selectCategory": "請選擇類別",
+    "typeLabel": "類型",
+    "selectType": "請選擇類型",
+    "tagsLabel": "標籤",
+    "maxTags": "最多 10 個",
+    "addTag": "新增標籤",
+    "submit": "編輯商品",
+    "sale": "售",
+    "wanted": "徵",
+    "success": "商品編輯成功！",
+    "failure": "編輯商品失敗。",
+    "requestError": "編輯商品請求發生錯誤，請稍後再試。"
   }
 }
