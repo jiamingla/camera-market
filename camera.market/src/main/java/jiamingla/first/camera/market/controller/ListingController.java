@@ -1,11 +1,14 @@
 package jiamingla.first.camera.market.controller;
 
 import jakarta.validation.Valid;
+import jiamingla.first.camera.market.dto.ListingDetailDto;
 import jiamingla.first.camera.market.dto.ListingSummaryDto;
 import jiamingla.first.camera.market.dto.MemberSummaryDto;
+import jiamingla.first.camera.market.dto.TagSummaryDto;
 import jiamingla.first.camera.market.entity.Listing;
 import jiamingla.first.camera.market.entity.ListingStatus;
 import jiamingla.first.camera.market.entity.Member;
+import jiamingla.first.camera.market.entity.Tag;
 import jiamingla.first.camera.market.service.ListingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,11 +54,12 @@ public class ListingController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Listing> getListingById(@PathVariable Long id) {
+    public ResponseEntity<ListingDetailDto> getListingById(@PathVariable Long id) {
         logger.info("Received request to get listing by ID: {}", id);
         Listing listing = listingService.getListingById(id);
-        logger.info("Returning listing: {}", listing);
-        return new ResponseEntity<>(listing, HttpStatus.OK);
+        ListingDetailDto listingDetailDto = convertToListingDetailDto(listing);
+        logger.info("Returning listing: {}", listingDetailDto);
+        return new ResponseEntity<>(listingDetailDto, HttpStatus.OK);
     }
 
     @PatchMapping
@@ -118,6 +122,7 @@ public class ListingController {
         dto.setPrice(listing.getPrice());
         dto.setStatus(listing.getStatus());
         dto.setType(listing.getType());
+        dto.setCategory(listing.getCategory());
 
         // Convert Member to MemberSummaryDto
         Member member = listing.getMember();
@@ -127,6 +132,53 @@ public class ListingController {
             memberDto.setUsername(member.getUsername());
             dto.setMember(memberDto);
         }
+        // Convert Tag to TagSummaryDto
+        List<TagSummaryDto> tagDtos = listing.getTags().stream()
+                .map(tag -> {
+                    TagSummaryDto tagDto = new TagSummaryDto();
+                    tagDto.setId(tag.getId());
+                    tagDto.setName(tag.getName());
+                    return tagDto;
+                })
+                .collect(Collectors.toList());
+        dto.setTags(tagDtos);
+
+        dto.setLastUpdateTime(listing.getLastUpdateTime());
+        return dto;
+    }
+
+    // Helper method to convert Listing to ListingDetailDto
+    private ListingDetailDto convertToListingDetailDto(Listing listing) {
+        ListingDetailDto dto = new ListingDetailDto();
+        dto.setId(listing.getId());
+        dto.setTitle(listing.getTitle());
+        dto.setDescription(listing.getDescription());
+        dto.setMake(listing.getMake());
+        dto.setModel(listing.getModel());
+        dto.setPrice(listing.getPrice());
+        dto.setCategory(listing.getCategory());
+        dto.setStatus(listing.getStatus());
+        dto.setType(listing.getType());
+        dto.setImages(listing.getImages());
+
+        // Convert Member to MemberSummaryDto
+        Member member = listing.getMember();
+        if (member != null) {
+            MemberSummaryDto memberDto = new MemberSummaryDto();
+            memberDto.setId(member.getId());
+            memberDto.setUsername(member.getUsername());
+            dto.setMember(memberDto);
+        }
+        // Convert Tag to TagSummaryDto
+        List<TagSummaryDto> tagDtos = listing.getTags().stream()
+                .map(tag -> {
+                    TagSummaryDto tagDto = new TagSummaryDto();
+                    tagDto.setId(tag.getId());
+                    tagDto.setName(tag.getName());
+                    return tagDto;
+                })
+                .collect(Collectors.toList());
+        dto.setTags(tagDtos);
 
         dto.setLastUpdateTime(listing.getLastUpdateTime());
         return dto;

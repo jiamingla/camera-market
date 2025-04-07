@@ -111,6 +111,7 @@ public class MemberController {
         response.setId(member.getId());
         response.setUsername(member.getUsername());
         response.setEmail(member.getEmail());
+        // TODO: 這一行拆去Listing，讓前端CALL 一次member拿member的資料，一次拿member底下的listing資料
         response.setListings(member.getListings());
         logger.info("Returning Member With Listings, member: {}", response.getUsername());
         return ResponseEntity.ok(response);
