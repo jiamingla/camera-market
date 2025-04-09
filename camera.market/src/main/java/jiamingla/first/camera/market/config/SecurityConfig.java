@@ -67,12 +67,19 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173")); // 允許來自 http://localhost:5173 的請求
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // 允許的 HTTP 方法
-        configuration.setAllowedHeaders(Arrays.asList("*")); // 允許所有標頭
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173", // 保留本地開發環境
+                "https://camera-market-frontend-cloud.web.app"  // 你的 Firebase Hosting 正式網址
+                // TODO: 如果你有自訂網域，也加進來，例如: "https://your-custom-domain.com"
+        ));
+        // 允許的 HTTP 方法 (可以保持原樣或根據需要調整)
+        // 確保包含前端會用到的所有方法，特別是 OPTIONS (瀏覽器會發送 Preflight 請求)
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        // 允許所有標頭
+        configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true); // 允許跨域請求攜帶憑證（例如 cookies）
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // 對所有路徑應用此 CORS 配置
+        source.registerCorsConfiguration("/api/**", configuration); // 可以更精確地只對 /api 路徑生效
         return source;
     }
 }

@@ -1,0 +1,22 @@
+# 忽略IDE相關的檔案
+.idea/
+.vscode/
+
+# 忽略編譯後的檔案 -> 但需要target/*.jar
+# target/
+out/
+
+# 忽略配置檔案
+*.iml
+*.log
+
+# 忽略文件庫
+node_modules/
+build/
+
+# 忽略資源檔案
+.DS_Store
+*.swp
+
+# 忽略環境設定檔案（視情況而定）
+*.env
