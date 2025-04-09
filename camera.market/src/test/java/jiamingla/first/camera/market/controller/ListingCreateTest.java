@@ -146,7 +146,7 @@ public class ListingCreateTest extends BaseControllerTest {
         listing.getTags().add(tag5);
         Tag tag6 = new Tag();
         tag6.setName("SONY");
-        tag6.setType(TagType.MAKE);
+        tag6.setType(TagType.OTHER);
         listing.getTags().add(tag6);
         Tag tag7 = new Tag();
         tag7.setName("A6000");

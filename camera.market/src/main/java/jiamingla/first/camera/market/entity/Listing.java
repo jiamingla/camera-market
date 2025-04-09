@@ -41,6 +41,7 @@ public class Listing {
     @Enumerated(EnumType.STRING)
     private Make make;
 
+    // TODO: 將Model改入Tags
     @NotBlank(message = "Model is required")
     private String model;
 

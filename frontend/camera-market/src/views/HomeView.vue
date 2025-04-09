@@ -9,14 +9,21 @@
     <div v-else>
       <!-- 有商品 -->
       <div v-if="listings.length > 0" class="listings-container">
-        <div v-for="listing in listings" :key="listing.id" class="listing-item">
-          <h3>{{ listing.title }}</h3>
-          <p>描述: {{ listing.description }}</p>
-          <p>廠牌: {{ listing.make }}</p>
-          <p>型號: {{ listing.model }}</p>
-          <p>價格: {{ listing.price }}</p>
-          <p>類別: {{ listing.category }}</p>
-        </div>
+        <router-link
+          v-for="listing in listings"
+          :key="listing.id"
+          :to="{ name: 'ListingDetail', params: { id: listing.id } }"
+          class="listing-item-link"
+        >
+          <div class="listing-item">
+            <h3>{{ listing.title }}</h3>
+            <p>廠牌: {{ listing.make }}</p>
+            <p>價格: {{ listing.price }}</p>
+            <p>類別: {{ listing.type }}</p>
+            <p>刊登者: {{ listing.member.username }}</p>
+            <p>最後編輯時間: {{ listing.lastUpdateTime }}</p>
+          </div>
+        </router-link>
       </div>
       <!-- 沒有商品 -->
       <div v-else>目前沒有商品</div>
@@ -26,6 +33,9 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 // 商品列表資料
 const listings = ref([]);
@@ -68,5 +78,17 @@ onMounted(async () => {
   border: 1px solid #ccc; /* 邊框 */
   padding: 1rem; /* 內邊距 */
   border-radius: 4px; /* 圓角 */
+  cursor: pointer; /* Add cursor pointer */
+  transition: background-color 0.3s ease; /* Add transition for hover effect */
+}
+
+.listing-item:hover {
+  background-color: #f0f0f0; /* Add hover effect */
+}
+
+.listing-item-link {
+  text-decoration: none; /* Remove underline from link */
+  color: inherit; /* Inherit color from parent */
+  display: block; /* Make the link a block element */
 }
 </style>
