@@ -14,11 +14,12 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.16",
+    "axios": "^1.8.4",
     "daisyui": "^5.0.9",
     "pinia": "^3.0.1",
     "tailwindcss": "^4.0.16",
     "vue": "^3.5.13",
-    "vue-i18n": "^12.0.0-alpha.2"
+    "vue-i18n": "^9.14.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

@@ -1,79 +1,102 @@
 import './assets/main.css';
 
-import { createApp, computed, ref } from 'vue'; // Import ref
+import { createApp, ref, readonly } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';
-import router from './router'; // Import the router
+import router from './router';
 import { createI18n } from 'vue-i18n';
 import zhTW from './locales/zh-TW.json';
 import en from './locales/en.json';
+import apiClient from '@/services/apiClient';
 
+console.log('Imported zhTW object:', JSON.stringify(zhTW, null, 2)); // 你確認這個是完整的
+
+// --- i18n Setup ---
 const i18n = createI18n({
-  locale: 'zh-TW', // Default locale
-  fallbackLocale: 'en', // Fallback locale
-  messages: {
-    'zh-TW': zhTW,
-    en: en,
-  },
+  locale: 'zh-TW',
+  fallbackLocale: 'en',
+  messages: { 'zh-TW': zhTW, 'en': en }, // 傳入導入的物件
+  legacy: false,
+  datetimeFormats: {
+    'zh-TW': {
+      short: { year: 'numeric', month: 'numeric', day: 'numeric' },
+      long: { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' }
+    },
+    'en': {
+      short: { year: 'numeric', month: 'numeric', day: 'numeric' },
+      long: { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' }
+    }
+  }
 });
 
+// --- Vue App Initialization ---
 const app = createApp(App);
 
 app.use(createPinia());
-app.use(router); // Use the router
+app.use(router);
+app.use(i18n); // 使用 i18n 實例
 
-// Create a reactive variable to hold the login status
-const isLoggedInRef = ref(false); // Initialize to false
+// --- 新增的檢查 ---
+console.log('i18n instance locale:', i18n.global.locale.value); // 再次確認 locale
+// 檢查 i18n 實例內部實際加載的 messages
+// 注意：訪問內部 messages 可能因 vue-i18n 版本而異，但 .value 通常適用於 Composition API
+console.log('i18n internal messages for zh-TW:', JSON.stringify(i18n.global.messages.value['zh-TW'], null, 2));
+// 嘗試直接從實例的 messages 中獲取值
+const appNameFromMessages = i18n.global.messages.value['zh-TW']?.common?.appName;
+console.log('Value directly from i18n messages:', appNameFromMessages);
+// --------------------
 
-// Function to check token validity
-const checkTokenValidity = async () => {
+console.log('Result of t("common.appName"):', i18n.global.t('common.appName')); // 你看到這個輸出鍵名
+
+// --- Reactive Authentication State ---
+// ... (後續代碼不變) ...
+const isLoggedInRef = ref(false);
+const currentUserIdRef = ref(null);
+
+function setAuthState(loggedIn, userId = null) {
+  isLoggedInRef.value = loggedIn;
+  currentUserIdRef.value = loggedIn ? userId : null;
+  console.log(`Auth state updated: isLoggedIn=${isLoggedInRef.value}, userId=${currentUserIdRef.value}`);
+}
+
+async function checkInitialAuthStatus() {
+  // ... (代碼不變) ...
   const token = localStorage.getItem('token');
   if (!token) {
-    isLoggedInRef.value = false;
+    console.log('No token found on startup.');
+    setAuthState(false);
     return;
   }
-
+  console.log('Token found, validating...');
   try {
-    // Send a request to the server to validate the token
-    const response = await fetch('/api/members/validate', { // Use the new validation endpoint
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    if (response.ok) {
-      isLoggedInRef.value = true;
+    const response = await apiClient.get('/members/profile'); // Changed to /profile
+    if (response.data && response.data.id) {
+      console.log('Token validation successful. User data:', response.data);
+      setAuthState(true, response.data.id);
     } else {
-      // Token is invalid, remove it from localStorage
+      console.warn('Token validation endpoint returned success, but user data (ID) is missing.');
       localStorage.removeItem('token');
-      isLoggedInRef.value = false;
+      setAuthState(false);
     }
   } catch (error) {
-    console.error('Error validating token:', error);
-    // Handle network errors or other issues
+    console.error('Token validation failed:', error.response?.status || error.message);
     localStorage.removeItem('token');
-    isLoggedInRef.value = false;
+    setAuthState(false);
   }
-};
+}
 
-// Call the function to check token validity on app startup
-checkTokenValidity();
-
-// Create a computed property to derive the login status
-const loginStatus = computed(() => {
-  console.log('loginStatus computed:', isLoggedInRef.value); // Add this line
-  return isLoggedInRef.value;
-});
-
-// Export a function to access the computed property and the ref
 export function useLoginStatus() {
   return {
-    isLoggedIn: loginStatus,
-    setLoggedIn: (value) => {
-      isLoggedInRef.value = value;
-    },
+    isLoggedIn: readonly(isLoggedInRef),
+    currentUserId: readonly(currentUserIdRef),
+    setLoggedIn: setAuthState,
   };
 }
-app.use(i18n);
-app.mount('#app');
+
+// --- Mount App AFTER Auth Check AND Router is Ready ---
+checkInitialAuthStatus().then(() => {
+  router.isReady().then(() => { // Wait for router to be ready
+  app.mount('#app');
+  console.log('Application mounted after initial authentication check.');
+  });
+});

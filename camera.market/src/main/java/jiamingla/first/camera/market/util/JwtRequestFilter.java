@@ -49,10 +49,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             try {
                 userDetails = this.customUserDetailsService.loadUserByUsername(username);
             } catch (Exception e) {
-                System.out.println("loadUserByUsername error: " + e.getMessage());
-                e.printStackTrace();
-                chain.doFilter(request, response);
-                return;
+                // 只記錄錯誤並清除 Context，不要在這裡調用 chain.doFilter 或 return
+                logger.error("Error loading user details for username: " + username, e); // 使用 logger
+                SecurityContextHolder.clearContext(); // 清除認證狀態
+                // 移除 chain.doFilter(request, response);
+                // 移除 return;
+                userDetails = null; // 確保 userDetails 為 null，以便後續 validateToken 不會執行
             }
             System.out.println("UserDetails:" + userDetails);
             if (jwtUtil.validateToken(jwt, userDetails)) {
