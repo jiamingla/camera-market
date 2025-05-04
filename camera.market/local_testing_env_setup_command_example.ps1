@@ -1,4 +1,4 @@
-# --- !! 重要：請替換成你的實際值 !! ---
+# --- 在本機端做測試都需要先執行這段powershell script ---
 
 # 你的 Google Cloud 專案 ID
 $env:GOOGLE_CLOUD_PROJECT = "camera-market-cloud" 
@@ -7,7 +7,7 @@ $env:GOOGLE_CLOUD_PROJECT = "camera-market-cloud"
 $env:DB_INSTANCE_CONNECTION_NAME = "camera-market-cloud:asia-east1:camera-market" 
 
 # 你的資料庫密碼 (從 Cloud SQL 實例設定中獲取)
-$env:DB_PASS = "password" 
+$env:DB_PASS = ""
 
 # 你的資料庫名稱 (如果不是 'camera_market'，請修改)
 $env:DB_NAME = "postgres" 
@@ -21,4 +21,3 @@ Write-Host "DB_PASS set: $($env:DB_PASS -ne $null -and $env:DB_PASS -ne '')" # �
 Write-Host "DB_NAME: $($env:DB_NAME)"
 Write-Host "DB_USER: $($env:DB_USER)"
 Write-Host "GOOGLE_CLOUD_PROJECT: $($env:GOOGLE_CLOUD_PROJECT)" # Socket Factory 可能會用到
-                    
