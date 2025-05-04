@@ -2,8 +2,9 @@
 
 ## 簡介
 
-Camera.Market 是一個基於 Spring Boot 框架開發的電子商務平台，專門用於相機和相關配件的線上交易。這個平台提供了使用者註冊、登入、瀏覽商品、發布商品等功能。本專案使用 Maven 作為構建工具，並使用 Maven Wrapper 簡化構建流程。
-
+Camera.Market 是一個基於 Spring Boot, Vue 框架開發的電子商務平台，專門用於相機和相關配件的線上交易。這個平台提供了使用者註冊、登入、瀏覽、發布、編輯和刪除商品等功能。  
+https://camera-market-cloud.web.app
+目前後端服務部署在 Google Cloud Run，前端服務部署在 Google Firebase Hosting，資料庫使用GCP的託管服務Cloud SQL，預計搬到 GCP 的 VM Compute Engine 裡面放一個DB，因為費用相對便宜很多。
 ## 主要功能
 
 *   **使用者管理：**
@@ -46,12 +47,8 @@ Camera.Market 是一個基於 Spring Boot 框架開發的電子商務平台，�
 ## 開發規劃
 
 *   專案上CI，Branch merge前要過test
-*   寫前端頁面，完善商品管理功能，增加商品的圖片、規格等資訊。
+*   完善商品管理功能，增加商品的圖片、規格等資訊。
 *   增加搜尋和篩選商品的功能。
 *   優化使用者介面和體驗。
 *   增加後台管理功能。
 * ...等等
-
-## 授權
-
-本專案採用 MIT 授權。
