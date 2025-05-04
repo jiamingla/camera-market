@@ -4,7 +4,7 @@
 
 Camera.Market 是一個基於 Spring Boot, Vue 框架開發的電子商務平台，專門用於相機和相關配件的線上交易。這個平台提供了使用者註冊、登入、瀏覽、發布、編輯和刪除商品等功能。  
 https://camera-market-cloud.web.app  
-目前後端服務部署在 Google Cloud Run，前端服務部署在 Google Firebase Hosting，資料庫使用GCP的託管服務Cloud SQL，預計搬到 GCP 的 VM Compute Engine 裡面放一個DB，因為費用相對便宜很多。
+目前後端服務部署在 Google Cloud Run，前端服務部署在 Google Firebase Hosting，資料庫使用GCP的託管服務Cloud SQL，預計搬到 GCP 的 VM Compute Engine 裡面放一個DB，因為費用相對便宜很多，但在搬家完成之前資料庫會先關著省錢@@。
 ## 主要功能
 
 *   **使用者管理：**
