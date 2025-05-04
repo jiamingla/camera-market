@@ -5,6 +5,7 @@ import jiamingla.first.camera.market.util.JwtRequestFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -19,6 +20,8 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationEn
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer; // 導入 WebSecurityCustomizer
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 
 import java.util.Arrays;
 
@@ -32,20 +35,34 @@ public class SecurityConfig {
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
 
+    // --- 新增 WebSecurityCustomizer Bean ---
+    // @Bean
+    // @Profile("!test") // 表示當 'test' profile *不*活躍時，才創建這個 Bean
+    // public WebSecurityCustomizer webSecurityCustomizer() {
+    //     // 配置 WebSecurity 忽略所有 OPTIONS 請求
+    //     // 這將使 OPTIONS 請求完全繞過 Spring Security Filter Chain
+    //     // 允許 CorsFilter 更早地處理它們
+    //     return (web) -> web.ignoring().requestMatchers(HttpMethod.OPTIONS, "/**");
+    // }
+    // --- WebSecurityCustomizer Bean 結束 ---
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // 禁用 CSRF 保護
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // 添加 CORS 配置
-                .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(new BasicAuthenticationEntryPoint())) // 添加這一行
-                //設定API的權限, 先通過permitAll, 再通過authenticated, 最後才檢查JwtRequestFilter
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(new BasicAuthenticationEntryPoint()))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/members/register", "/api/members/login").permitAll() // 允許註冊和登錄接口不需要token
-                        .requestMatchers(HttpMethod.GET, "/api/listings/**").permitAll() // 允許 GET /api/listings/** 不需要 token
-                        .anyRequest().authenticated() // 其他所有請求都需要通過驗證
+                        // --- 從這裡移除 OPTIONS 的 permitAll，因為 WebSecurityCustomizer 會處理 ---
+                        // .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // --- 保持現有規則 ---
+                        // 建議明確指定 POST 方法
+                        .requestMatchers(HttpMethod.POST, "/api/members/register", "/api/members/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/listings/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/members/member/**").permitAll() // 使用 ** 匹配路徑參數
+                        .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))// 使用 JWT，不需要 Session
-                //把JwtRequestFilter加到UsernamePasswordAuthenticationFilter的前面
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
         ;
         return http.build();
@@ -63,16 +80,19 @@ public class SecurityConfig {
         return authManagerBuilder.build();
     }
 
-    // 配置 CORS
+    // 配置 CORS (保持不變)
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173")); // 允許來自 http://localhost:5173 的請求
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // 允許的 HTTP 方法
-        configuration.setAllowedHeaders(Arrays.asList("*")); // 允許所有標頭
-        configuration.setAllowCredentials(true); // 允許跨域請求攜帶憑證（例如 cookies）
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173",
+                "https://camera-market-frontend-cloud.web.app"
+        ));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // 對所有路徑應用此 CORS 配置
+        source.registerCorsConfiguration("/api/**", configuration);
         return source;
     }
 }

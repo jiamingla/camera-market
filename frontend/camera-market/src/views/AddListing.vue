@@ -1,78 +1,73 @@
 <template>
-  <div class="edit-listing-container">
-    <h2>{{ $t('editListing.title') }}</h2>
-    <!-- Loading State -->
-    <div v-if="isLoading">載入中...</div>
-    <!-- Error State (Initial Load) -->
-    <div v-else-if="loadError">載入失敗：{{ loadError.message || '無法載入商品資料' }}</div>
-    <!-- Form Display -->
-    <form v-else-if="listing" @submit.prevent="handleSubmit">
+  <div class="add-listing-container">
+    <h2>{{ $t('addListing.title') }}</h2>
+    <form @submit.prevent="handleSubmit">
       <!-- Title -->
       <div class="form-group">
-        <label for="title">{{ $t('editListing.titleLabel') }}:</label>
+        <label for="title">{{ $t('addListing.titleLabel') }}:</label>
         <input type="text" id="title" v-model="listing.title" required />
         <div v-if="validationErrors.title" class="error-message">{{ validationErrors.title }}</div>
       </div>
       <!-- Description -->
       <div class="form-group">
-        <label for="description">{{ $t('editListing.descriptionLabel') }}:</label>
+        <label for="description">{{ $t('addListing.descriptionLabel') }}:</label>
         <textarea id="description" v-model="listing.description" required></textarea>
         <div v-if="validationErrors.description" class="error-message">{{ validationErrors.description }}</div>
       </div>
       <!-- Make -->
       <div class="form-group">
-        <label for="make">{{ $t('editListing.makeLabel') }}:</label>
+        <label for="make">{{ $t('addListing.makeLabel') }}:</label>
         <select id="make" v-model="listing.make" required>
-          <option value="" disabled>{{ $t('editListing.selectMake') }}</option>
+          <option value="" disabled>{{ $t('addListing.selectMake') }}</option>
           <option v-for="make in makes" :key="make" :value="make">{{ make }}</option>
         </select>
         <div v-if="validationErrors.make" class="error-message">{{ validationErrors.make }}</div>
       </div>
       <!-- Model -->
       <div class="form-group">
-        <label for="model">{{ $t('editListing.modelLabel') }}:</label>
+        <label for="model">{{ $t('addListing.modelLabel') }}:</label>
         <input type="text" id="model" v-model="listing.model" required />
         <div v-if="validationErrors.model" class="error-message">{{ validationErrors.model }}</div>
       </div>
       <!-- Price -->
       <div class="form-group">
-        <label for="price">{{ $t('editListing.priceLabel') }}:</label>
+        <label for="price">{{ $t('addListing.priceLabel') }}:</label>
         <input type="number" id="price" v-model.number="listing.price" required min="0" />
         <div v-if="validationErrors.price" class="error-message">{{ validationErrors.price }}</div>
       </div>
       <!-- Category -->
       <div class="form-group">
-        <label for="category">{{ $t('editListing.categoryLabel') }}:</label>
+        <label for="category">{{ $t('addListing.categoryLabel') }}:</label>
         <select id="category" v-model="listing.category" required>
-          <option value="" disabled>{{ $t('editListing.selectCategory') }}</option>
+          <option value="" disabled>{{ $t('addListing.selectCategory') }}</option>
           <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
         </select>
         <div v-if="validationErrors.category" class="error-message">{{ validationErrors.category }}</div>
       </div>
       <!-- Type -->
       <div class="form-group">
-        <label for="type">{{ $t('editListing.typeLabel') }}:</label>
+        <label for="type">{{ $t('addListing.typeLabel') }}:</label>
         <select id="type" v-model="listing.type" required>
-          <option value="" disabled>{{ $t('editListing.selectType') }}</option>
+          <option value="" disabled>{{ $t('addListing.selectType') }}</option>
           <option v-for="type in localizedTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
         </select>
         <div v-if="validationErrors.type" class="error-message">{{ validationErrors.type }}</div>
       </div>
       <!-- Tags -->
       <div class="form-group">
-        <label for="tags">{{ $t('editListing.tagsLabel') }} ({{ $t('editListing.maxTags') }}):</label>
+        <label for="tags">{{ $t('addListing.tagsLabel') }} ({{ $t('addListing.maxTags') }}):</label>
         <input type="text" id="tags" v-model="newTag" @keydown.enter.prevent="addTag" />
-        <button type="button" @click="addTag" style="margin-left: 5px;">{{ $t('editListing.addTag') }}</button>
+        <button type="button" @click="addTag" style="margin-left: 5px;">{{ $t('addListing.addTag') }}</button>
         <div v-if="validationErrors.tags" class="error-message">{{ validationErrors.tags }}</div>
         <div class="tags-container">
           <span v-for="(tag, index) in listing.tags" :key="index" class="tag">
             {{ tag.name }}
-            <button type="button" @click="removeTag(index)" class="remove-tag" aria-label="Remove tag">X</button>
+            <button type="button" @click="removeTag(index)" class="remove-tag" :aria-label="$t('editListing.removeTagAriaLabel')">X</button> <!-- Borrowed aria-label from edit -->
           </span>
         </div>
       </div>
       <!-- Submit Button -->
-      <button type="submit" :disabled="isSubmitting">{{ isSubmitting ? $t('editListing.submitting') : $t('editListing.submit') }}</button>
+      <button type="submit" :disabled="isSubmitting">{{ isSubmitting ? $t('addListing.submitting') : $t('addListing.submit') }}</button>
     </form>
     <!-- Success Message -->
     <div v-if="successMessage" class="success-message">
@@ -82,21 +77,25 @@
     <div v-if="submitError" class="error-message">
       {{ submitError }}
     </div>
+    <!-- Display created listing info (optional) -->
+    <!-- <div v-if="createdListing && createdListing.seller" class="seller-info">
+      <h3>{{ $t('addListing.sellerInfo') }}</h3>
+      <p>{{ $t('addListing.sellerId') }}: {{ createdListing.seller.id }}</p>
+      <p>{{ $t('addListing.sellerName') }}: {{ createdListing.seller.username }}</p>
+    </div> -->
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import apiClient from '@/services/apiClient'; // Import the configured apiClient
 
-const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
-const listingId = route.params.id;
 
-// State for listing data
+// Reactive state for the form data
 const listing = ref({
   title: '',
   description: '',
@@ -105,62 +104,49 @@ const listing = ref({
   price: null,
   category: '',
   type: '',
-  tags: [], // Store tags as objects { name: 'tagname' }
+  tags: [], // Array of objects: { name: 'tag name' }
 });
 
-// State for UI control
-const isLoading = ref(true);
-const isSubmitting = ref(false); // Track submission state
-const loadError = ref(null); // Error during initial data load
-const submitError = ref(null); // General error during submission
+// UI control state
+const isSubmitting = ref(false);
 const successMessage = ref('');
-const validationErrors = ref({}); // Specific field validation errors from backend
+const submitError = ref(null); // General submission error message
+const validationErrors = ref({}); // Field-specific validation errors
 
-// State for adding tags
+// Tag input state
 const newTag = ref('');
 
-// --- Static Data (Consider moving to constants file if used elsewhere) ---
+// Static data (could be moved to a constants file)
 const makes = ref(['CANON', 'NIKON', 'SONY', 'FUJIFILM', "OLYMPUS", "PANASONIC", "RICOH", "SIGMA", "LEICA", "HASSELBLAD", "DJI", "OTHER"]);
 const categories = ref([
     'DSLR', 'MIRRORLESS', 'COMPACT', 'FILM', 'LENS', 'TRIPOD', 'ACCESSORY', 'BAG', 'OTHER'
 ]);
 
-// Computed property for localized types based on i18n
+// Computed property for localized types
 const localizedTypes = computed(() => {
   return [
-    { value: 'SALE', label: t('editListing.sale') },
-    { value: 'WANTED', label: t('editListing.wanted') },
+    { value: 'SALE', label: t('addListing.sale') },
+    { value: 'WANTED', label: t('addListing.wanted') },
   ];
 });
-// --- End Static Data ---
 
-// Fetch initial listing data when component mounts
-onMounted(async () => {
-  isLoading.value = true;
-  loadError.value = null;
-  try {
-    // Use apiClient to fetch data. Assume fetching details is public.
-    // Pass { requiresAuth: false } to prevent sending token
-    const response = await apiClient.get(`/listings/${listingId}`, { requiresAuth: false });
-
-    // Axios provides data directly in response.data
-    const data = response.data;
-
-    // Populate the listing ref with fetched data
-    // Ensure tags are in the expected format { name: '...' }
-    listing.value = {
-      ...data, // Spread existing fields
-      tags: Array.isArray(data.tags) ? data.tags.map(tag => (typeof tag === 'string' ? { name: tag } : tag)) : [], // Handle potential variations in tag format
-      price: data.price // Ensure price is handled correctly (might be string from API)
-    };
-
-  } catch (err) {
-    console.error("載入商品資訊失敗:", err);
-    loadError.value = err; // Store the whole error object for more details if needed
-  } finally {
-    isLoading.value = false;
-  }
-});
+// Function to reset the form
+const resetForm = () => {
+  listing.value = {
+    title: '',
+    description: '',
+    make: '',
+    model: '',
+    price: null,
+    category: '',
+    type: '',
+    tags: [],
+  };
+  newTag.value = '';
+  validationErrors.value = {};
+  submitError.value = null;
+  successMessage.value = '';
+};
 
 // Handle form submission
 const handleSubmit = async () => {
@@ -170,7 +156,7 @@ const handleSubmit = async () => {
   validationErrors.value = {};
 
   try {
-    // Prepare data for submission (ensure tags are just an array of strings or objects as backend expects)
+    // Prepare the payload - ensure tags are in the correct format if needed
     // Assuming backend expects an array of tag objects like { name: 'tagname' }
     const payload = {
       ...listing.value,
@@ -178,22 +164,31 @@ const handleSubmit = async () => {
       price: Number(listing.value.price) // Ensure price is a number
     };
 
-    // Use apiClient.patch - it will automatically include the token if available (default behavior)
-    const response = await apiClient.patch(`/listings/${listingId}`, payload);
+    // Use apiClient.post - Token is handled by the interceptor (default requiresAuth: true)
+    const response = await apiClient.post('/listings', payload);
 
-    // Check if response indicates success (usually 200 OK for PATCH with body, or 204 No Content)
-    if (response.status === 200 || response.status === 204) {
-        successMessage.value = t('editListing.success');
-        setTimeout(() => {
-          router.push({ name: 'ListingDetail', params: { id: listingId } });
-        }, 1000); // Redirect after 1 second
+    // Check for successful creation (HTTP 201 Created is typical for POST)
+    if (response.status === 201) {
+      successMessage.value = t('addListing.success');
+      // Optionally store the created listing data if needed elsewhere
+      // createdListing.value = response.data;
+      resetForm(); // Reset the form on success
+      // Redirect after a short delay
+      setTimeout(() => {
+        // Redirect to the newly created listing's detail page if the ID is in the response
+        if (response.data && response.data.id) {
+          router.push({ name: 'ListingDetail', params: { id: response.data.id } });
+        } else {
+          router.push('/'); // Fallback to home page
+        }
+      }, 1500); // Redirect after 1.5 seconds
     } else {
-        // This part might be less likely if Axios interceptor handles non-2xx
-        submitError.value = t('editListing.failure');
+      // Handle unexpected success status codes if necessary
+      submitError.value = `${t('addListing.failure')} (Status: ${response.status})`;
     }
 
   } catch (err) {
-    console.error('編輯商品請求錯誤:', err);
+    console.error('新增商品請求錯誤:', err);
     if (err.response) {
       // Server responded with an error status (4xx, 5xx)
       const status = err.response.status;
@@ -202,22 +197,22 @@ const handleSubmit = async () => {
       if (status === 400 && typeof errorData === 'object' && errorData !== null) {
         // Handle validation errors from backend
         validationErrors.value = errorData;
-        submitError.value = t('editListing.validationError'); // Set a general validation error message
+        submitError.value = t('addListing.validationError');
       } else if (status === 401) {
-        submitError.value = t('editListing.loginRequired');
-        // Consider redirecting to login via interceptor or here
+        submitError.value = t('addListing.loginRequired');
+        // The interceptor might handle redirection, but show message
       } else if (status === 403) {
-        submitError.value = t('editListing.permissionDenied');
+        submitError.value = t('addListing.permissionDenied');
       } else {
         // Other server errors
-        submitError.value = (errorData && errorData.message) || t('editListing.failure');
+        submitError.value = (errorData && errorData.message) || t('addListing.failure');
       }
     } else if (err.request) {
       // Network error (no response received)
-      submitError.value = t('editListing.networkError');
+      submitError.value = t('addListing.networkError');
     } else {
       // Request setup error
-      submitError.value = t('editListing.requestError');
+      submitError.value = t('addListing.requestError');
     }
   } finally {
     isSubmitting.value = false;
@@ -227,31 +222,35 @@ const handleSubmit = async () => {
 // Add a new tag
 const addTag = () => {
   const tagName = newTag.value.trim();
-  if (tagName !== '' && listing.value.tags.length < 10) {
-    // Avoid adding duplicate tags
-    if (!listing.value.tags.some(tag => tag.name === tagName)) {
+  if (tagName) {
+    if (listing.value.tags.length >= 10) {
+      validationErrors.value.tags = t('addListing.maxTagsError');
+    } else if (listing.value.tags.some(tag => tag.name === tagName)) {
+      validationErrors.value.tags = t('addListing.duplicateTagError');
+    } else {
       listing.value.tags.push({ name: tagName });
       newTag.value = ''; // Clear input
       validationErrors.value.tags = null; // Clear tag error if any
-    } else {
-       validationErrors.value.tags = t('editListing.duplicateTagError');
     }
-  } else if (listing.value.tags.length >= 10) {
-    validationErrors.value.tags = t('editListing.maxTagsError');
   }
 };
 
 // Remove a tag by index
 const removeTag = (index) => {
   listing.value.tags.splice(index, 1);
+  // Clear max tags error if removing a tag brings it below the limit
+  if (listing.value.tags.length < 10 && validationErrors.value.tags === t('addListing.maxTagsError')) {
+     validationErrors.value.tags = null;
+  }
 };
 
 </script>
 
 <style scoped>
-.edit-listing-container {
-  max-width: 600px; /* Limit width for better readability */
-  margin: 20px auto; /* Center the container */
+/* Styles are similar to EditListing, adjusted for consistency */
+.add-listing-container {
+  max-width: 600px;
+  margin: 20px auto;
   padding: 20px;
   border: 1px solid #eee;
   border-radius: 8px;
@@ -265,8 +264,8 @@ h2 {
 }
 
 .form-group {
-  margin-bottom: 1.2rem; /* Increased spacing */
-  width: 100%; /* Make form groups take full width */
+  margin-bottom: 1.2rem;
+  width: 100%;
 }
 
 label {
@@ -281,16 +280,16 @@ input[type="number"],
 textarea,
 select {
   width: 100%;
-  padding: 0.75rem; /* Increased padding */
+  padding: 0.75rem;
   border: 1px solid #ccc;
   border-radius: 4px;
-  box-sizing: border-box; /* Include padding and border in element's total width and height */
+  box-sizing: border-box;
   font-size: 1rem;
 }
 
 textarea {
-  height: 120px; /* Increased height */
-  resize: vertical; /* Allow vertical resizing */
+  height: 120px;
+  resize: vertical;
 }
 
 button[type="submit"] {
@@ -302,15 +301,14 @@ button[type="submit"] {
   cursor: pointer;
   font-size: 1rem;
   transition: background-color 0.3s ease;
-  width: 100%; /* Make submit button full width */
-  margin-top: 10px; /* Add some space above the button */
+  width: 100%;
+  margin-top: 10px;
 }
 
 button[type="submit"]:disabled {
   background-color: #ccc;
   cursor: not-allowed;
 }
-
 
 button[type="submit"]:hover:not(:disabled) {
   background-color: #36a374;
@@ -325,12 +323,12 @@ button[type="button"] { /* Style for Add Tag button */
   cursor: pointer;
   font-size: 0.9rem;
   transition: background-color 0.3s ease;
+  vertical-align: middle; /* Align with input */
 }
 
 button[type="button"]:hover {
   background-color: #0056b3;
 }
-
 
 .success-message {
   color: green;
@@ -342,14 +340,9 @@ button[type="button"]:hover {
   text-align: center;
 }
 
-.error-message {
-  color: #d9534f; /* Bootstrap danger color */
-  font-size: 0.875em;
-  margin-top: 0.25rem;
-}
-
-/* General submission error styling */
-.edit-listing-container > .error-message {
+/* General error message styling */
+.add-listing-container > .error-message {
+    color: #d9534f;
     background-color: #f8d7da;
     border: 1px solid #f5c6cb;
     padding: 10px;
@@ -358,23 +351,30 @@ button[type="button"]:hover {
     text-align: center;
 }
 
+/* Field-specific validation error */
+.form-group .error-message {
+  color: #d9534f;
+  font-size: 0.875em;
+  margin-top: 0.25rem;
+}
+
 
 .tags-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px; /* Increased gap */
-  margin-top: 8px; /* Increased margin */
+  gap: 8px;
+  margin-top: 8px;
   padding: 8px;
-  border: 1px solid #eee; /* Add a light border */
+  border: 1px solid #eee;
   border-radius: 4px;
-  min-height: 40px; /* Ensure some height even when empty */
+  min-height: 40px;
 }
 
 .tag {
   background-color: #e0e0e0;
   padding: 5px 10px;
   border-radius: 15px;
-  display: inline-flex; /* Use inline-flex for better alignment */
+  display: inline-flex;
   align-items: center;
   font-size: 0.9em;
 }
@@ -382,15 +382,17 @@ button[type="button"]:hover {
 .remove-tag {
   background-color: transparent;
   border: none;
-  color: #dc3545; /* Bootstrap danger color */
+  color: #dc3545;
   cursor: pointer;
   margin-left: 5px;
   padding: 0 3px;
   font-weight: bold;
-  line-height: 1; /* Adjust line height */
+  line-height: 1;
 }
 
 .remove-tag:hover {
     color: #a02530;
 }
+
+/* Removed seller-info styles as the display is commented out */
 </style>

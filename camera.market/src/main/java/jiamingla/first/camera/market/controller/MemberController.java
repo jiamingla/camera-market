@@ -51,7 +51,7 @@ public class MemberController {
             logger.warn("Username {} already exists", member.getUsername());
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("message", "Username already exists");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
         catch (Exception e) {
             logger.error("An unexpected error occurred during register for user: {}", member.getUsername(), e);
