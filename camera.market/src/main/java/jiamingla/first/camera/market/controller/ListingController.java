@@ -1,17 +1,28 @@
 package jiamingla.first.camera.market.controller;
 
 import jakarta.validation.Valid;
+import jiamingla.first.camera.market.dto.ListingDetailDto;
+import jiamingla.first.camera.market.dto.ListingSummaryDto;
+import jiamingla.first.camera.market.dto.MemberSummaryDto;
+import jiamingla.first.camera.market.dto.TagSummaryDto;
 import jiamingla.first.camera.market.entity.Listing;
 import jiamingla.first.camera.market.entity.ListingStatus;
+import jiamingla.first.camera.market.entity.Member;
+import jiamingla.first.camera.market.entity.Tag;
 import jiamingla.first.camera.market.service.ListingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/listings")
@@ -31,19 +42,24 @@ public class ListingController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Listing>> getAllListings() {
+    public ResponseEntity<List<ListingSummaryDto>> getAllListings() {
         logger.info("Received request to get all listings.");
         List<Listing> listings = listingService.getAllListings();
-        logger.info("Returning {} listings.", listings.size());
-        return new ResponseEntity<>(listings, HttpStatus.OK);
+        // Convert Listing to ListingSummaryDto
+        List<ListingSummaryDto> listingSummaryDtos = listings.stream()
+                .map(this::convertToListingSummaryDto)
+                .collect(Collectors.toList());
+        logger.info("Returning {} listing summaries.", listingSummaryDtos.size());
+        return new ResponseEntity<>(listingSummaryDtos, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Listing> getListingById(@PathVariable Long id) {
+    public ResponseEntity<ListingDetailDto> getListingById(@PathVariable Long id) {
         logger.info("Received request to get listing by ID: {}", id);
         Listing listing = listingService.getListingById(id);
-        logger.info("Returning listing: {}", listing);
-        return new ResponseEntity<>(listing, HttpStatus.OK);
+        ListingDetailDto listingDetailDto = convertToListingDetailDto(listing);
+        logger.info("Returning listing: {}", listingDetailDto);
+        return new ResponseEntity<>(listingDetailDto, HttpStatus.OK);
     }
 
     @PatchMapping
@@ -63,19 +79,108 @@ public class ListingController {
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Listing>> getListingsByStatus(@PathVariable ListingStatus status) {
+    public ResponseEntity<List<ListingSummaryDto>> getListingsByStatus(@PathVariable ListingStatus status) {
         logger.info("Received request to get listings by status: {}", status);
         List<Listing> listings = listingService.getListingsByStatus(status);
-        logger.info("Returning {} listings with status {}.", listings.size(), status);
-        return new ResponseEntity<>(listings, HttpStatus.OK);
+        List<ListingSummaryDto> listingSummaryDtos = listings.stream()
+                .map(this::convertToListingSummaryDto)
+                .collect(Collectors.toList());
+        logger.info("Returning {} listings with status {}.", listingSummaryDtos.size(), status);
+        return new ResponseEntity<>(listingSummaryDtos, HttpStatus.OK);
     }
 
     @GetMapping("/category/{category}")
-    public ResponseEntity<List<Listing>> getListingsByCategoryId(@PathVariable String category) {
+    public ResponseEntity<List<ListingSummaryDto>> getListingsByCategoryId(@PathVariable String category) {
         logger.info("Received request to get listings by category: {}", category);
         List<Listing> listings = listingService.getListingsByCategoryId(category);
-        logger.info("Returning {} listings in category {}.", listings.size(), category);
-        return new ResponseEntity<>(listings, HttpStatus.OK);
+        List<ListingSummaryDto> listingSummaryDtos = listings.stream()
+                .map(this::convertToListingSummaryDto)
+                .collect(Collectors.toList());
+        logger.info("Returning {} listings in category {}.", listingSummaryDtos.size(), category);
+        return new ResponseEntity<>(listingSummaryDtos, HttpStatus.OK);
     }
 
+    // 新增異常處理器
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+        return errors;
+    }
+
+    // Helper method to convert Listing to ListingSummaryDto
+    private ListingSummaryDto convertToListingSummaryDto(Listing listing) {
+        ListingSummaryDto dto = new ListingSummaryDto();
+        dto.setId(listing.getId());
+        dto.setTitle(listing.getTitle());
+        dto.setMake(listing.getMake());
+        dto.setPrice(listing.getPrice());
+        dto.setStatus(listing.getStatus());
+        dto.setType(listing.getType());
+        dto.setCategory(listing.getCategory());
+
+        // Convert Member to MemberSummaryDto
+        Member member = listing.getMember();
+        if (member != null) {
+            MemberSummaryDto memberDto = new MemberSummaryDto();
+            memberDto.setId(member.getId());
+            memberDto.setUsername(member.getUsername());
+            dto.setMember(memberDto);
+        }
+        // Convert Tag to TagSummaryDto
+        List<TagSummaryDto> tagDtos = listing.getTags().stream()
+                .map(tag -> {
+                    TagSummaryDto tagDto = new TagSummaryDto();
+                    tagDto.setId(tag.getId());
+                    tagDto.setName(tag.getName());
+                    return tagDto;
+                })
+                .collect(Collectors.toList());
+        dto.setTags(tagDtos);
+
+        dto.setLastUpdateTime(listing.getLastUpdateTime());
+        return dto;
+    }
+
+    // Helper method to convert Listing to ListingDetailDto
+    private ListingDetailDto convertToListingDetailDto(Listing listing) {
+        ListingDetailDto dto = new ListingDetailDto();
+        dto.setId(listing.getId());
+        dto.setTitle(listing.getTitle());
+        dto.setDescription(listing.getDescription());
+        dto.setMake(listing.getMake());
+        dto.setModel(listing.getModel());
+        dto.setPrice(listing.getPrice());
+        dto.setCategory(listing.getCategory());
+        dto.setStatus(listing.getStatus());
+        dto.setType(listing.getType());
+        dto.setImages(listing.getImages());
+
+        // Convert Member to MemberSummaryDto
+        Member member = listing.getMember();
+        if (member != null) {
+            MemberSummaryDto memberDto = new MemberSummaryDto();
+            memberDto.setId(member.getId());
+            memberDto.setUsername(member.getUsername());
+            dto.setMember(memberDto);
+        }
+        // Convert Tag to TagSummaryDto
+        List<TagSummaryDto> tagDtos = listing.getTags().stream()
+                .map(tag -> {
+                    TagSummaryDto tagDto = new TagSummaryDto();
+                    tagDto.setId(tag.getId());
+                    tagDto.setName(tag.getName());
+                    return tagDto;
+                })
+                .collect(Collectors.toList());
+        dto.setTags(tagDtos);
+
+        dto.setLastUpdateTime(listing.getLastUpdateTime());
+        return dto;
+    }
 }

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -31,7 +32,7 @@ public class Member {
     @Column(unique = true)
     private String email;
 
-    @JsonIgnore //避免無限遞迴
-    @OneToMany(mappedBy = "seller")
-    private List<Listing> listings;
+    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+    @JsonIgnore // Add this line
+    private List<Listing> listings = new ArrayList<>();
 }
