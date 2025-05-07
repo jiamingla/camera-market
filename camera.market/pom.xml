@@ -10,7 +10,7 @@
     </parent>
     <groupId>jiamingla.first</groupId>
     <artifactId>camera.market</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.2-SNAPSHOT</version>
     <name>camera.market</name>
     <description>camera.market</description>
     <properties>
@@ -54,18 +54,25 @@
         </dependency>
 
             <!-- PostgreSQL JDBC Driver -->
-        <dependency>
+            <!-- Google Cloud SQL Socket Factory (推薦用於 Cloud Run) -->
+        <!-- <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Google Cloud SQL Socket Factory (推薦用於 Cloud Run) -->
         <dependency>
             <groupId>com.google.cloud.sql</groupId>
             <artifactId>postgres-socket-factory</artifactId>
-            <version>1.18.0</version> <!-- Check for the latest version -->
+            <version>1.18.0</version>
             <scope>runtime</scope>
+        </dependency> -->
+
+        <!-- 加入 MySQL Connector/J -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.33</version> <!-- 請使用適合你專案的最新穩定版本 -->
         </dependency>
 
         <!-- Lombok -->

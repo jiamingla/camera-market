@@ -46,17 +46,17 @@ public class DataSourceConfig {
      * 生產/開發環境數據源配置 (Cloud SQL)
      * 會自動讀取 spring.datasource.* 和 spring.datasource.hikari.* 相關屬性
      */
-    @Bean
-    @ConfigurationProperties("spring.datasource.hikari") // 讀取 Hikari 特定配置
-    @Profile("!test") // 在非 'test' profile 激活時創建這個 DataSource Bean
-    public DataSource cloudSqlDataSource(DataSourceProperties properties) {
-        // 使用從 application.properties 加載的 Cloud SQL 配置創建 HikariDataSource
-        // 這裡會讀取並使用 socketFactory 和 cloudSqlInstance 屬性
-        HikariDataSource dataSource = properties.initializeDataSourceBuilder()
-                                            .type(HikariDataSource.class).build();
-        // 可以選擇性地設置 Cloud SQL 特定的連接池參數
-        // dataSource.setMaximumPoolSize(10);
-        System.out.println("--- Using Cloud SQL DataSource ---");
-        return dataSource;
-    }
+    // @Bean
+    // @ConfigurationProperties("spring.datasource.hikari") // 讀取 Hikari 特定配置
+    // @Profile("!test") // 在非 'test' profile 激活時創建這個 DataSource Bean
+    // public DataSource cloudSqlDataSource(DataSourceProperties properties) {
+    //     // 使用從 application.properties 加載的 Cloud SQL 配置創建 HikariDataSource
+    //     // 這裡會讀取並使用 socketFactory 和 cloudSqlInstance 屬性
+    //     HikariDataSource dataSource = properties.initializeDataSourceBuilder()
+    //                                         .type(HikariDataSource.class).build();
+    //     // 可以選擇性地設置 Cloud SQL 特定的連接池參數
+    //     // dataSource.setMaximumPoolSize(10);
+    //     System.out.println("--- Using Cloud SQL DataSource ---");
+    //     return dataSource;
+    // }
 }
